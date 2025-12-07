@@ -37,9 +37,8 @@ app.use(session({
     }
 }));
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console. log('✅ MongoDB connecté'))
+mongoose.connect("mongodb+srv://amine:yuyu123..@cluster0.gmtx6rf.mongodb.net/sportwearDB?retryWrites=true&w=majority&appName=Cluster0")
+    .then(() => console.log('✅ MongoDB connecté'))
     .catch(err => console.error('❌ Erreur MongoDB:', err));
 
 // Product Schema
