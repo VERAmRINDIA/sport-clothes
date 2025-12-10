@@ -6,11 +6,10 @@
     <title>SPORTWEAR - Official Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* --- VARIABLES GLOBALES (Thème Facile à changer) --- */
         :root {
-            --primary: #FF6B35;       /* Orange Signature */
+            --primary: #FF6B35;
             --primary-dark: #e55a2b;
-            --dark: #0f172a;          /* Noir Profond Premium */
+            --dark: #0f172a;
             --light: #f8fafc;
             --gray: #64748b;
             --glass: rgba(255, 255, 255, 0.9);
@@ -31,10 +30,9 @@
 
         h1, h2, h3, h4, .logo-text, .btn {
             font-family: 'Montserrat', sans-serif;
-            letter-spacing: -0.03em; /* Look Moderne serré */
+            letter-spacing: -0.03em;
         }
 
-        /* --- 1. TOP BAR (ANNONCE) --- */
         .top-bar {
             background: var(--dark);
             color: white;
@@ -48,7 +46,7 @@
             z-index: 1001;
         }
 
-        /* --- 2. HEADER GLASSMORPHISM --- */
+
         .header {
             background: var(--glass);
             backdrop-filter: blur(15px);
@@ -129,14 +127,14 @@
             border: 2px solid white;
         }
 
-        /* --- 3. HERO SECTION (IMPACT VISUEL) --- */
+
         .hero {
             position: relative;
             height: 85vh;
             background: radial-gradient(circle at center, rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url('image1.jpg');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed; /* Effet Parallax */
+            background-attachment: fixed; /* */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -170,7 +168,7 @@
         }
         .btn-main:hover { transform: translateY(-5px); background: var(--primary-dark); }
 
-        /* --- 4. BANDEAU RÉASSURANCE --- */
+
         .features-bar {
             background: white;
             padding: 3rem 0;
@@ -185,7 +183,7 @@
         .feature-item p { font-size: 0.9rem; color: var(--gray); }
         .feature-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
 
-        /* --- 5. COMPTE À REBOURS (FLASH SALE) --- */
+
         .flash-sale {
             background: var(--dark); color: white;
             padding: 4rem 2rem; text-align: center;
@@ -203,7 +201,7 @@
         .time-number { font-size: 2.5rem; font-weight: 800; display: block; color: var(--primary); }
         .time-label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.7; }
 
-        /* --- 6. PRODUITS (GRID INTELLIGENTE) --- */
+
         .section-container { max-width: 1400px; margin: 5rem auto; padding: 0 2rem; }
         .section-header {
             display: flex; justify-content: space-between; align-items: end; margin-bottom: 3rem;
@@ -257,7 +255,7 @@
         .card-title { font-size: 1.2rem; margin: 5px 0; font-weight: 700; }
         .card-price { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
 
-        /* --- 7. SLIDE-OUT PANIER (LE "GAME CHANGER") --- */
+
         .cart-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); z-index: 2000;
@@ -289,12 +287,12 @@
         }
         .checkout-btn:hover { background: var(--primary); }
 
-        /* --- FOOTER STYLES --- */
+
 .footer {
-    background: #111; /* Dark background */
+    background: #111; /* */
     color: white;
     padding-top: 5rem;
-    border-top: 4px solid var(--primary); /* Orange top border */
+    border-top: 4px solid var(--primary); /* */
     margin-top: 5rem;
 }
 
@@ -372,7 +370,7 @@
         align-items: center;
     }
 }
-/* SOCIAL ICONS FIX */
+/* */
 .social-link {
     display: inline-block; /* Makes the link wrap the image properly */
     cursor: pointer;
@@ -388,13 +386,13 @@
 .footer .social-group img {
     width: 32px !important;
     height: 32px !important;
-    min-width: 32px; /* Prevents squishing */
+    min-width: 32px; /* */
 }
 
-        /* --- ANIMATIONS --- */
+
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Responsive */
+        /* */
         @media (max-width: 1024px) {
             .hero h1 { font-size: 3rem; }
             .features-grid { grid-template-columns: 1fr 1fr; }
@@ -599,24 +597,22 @@
     </footer>
 
     <script>
-    // --- API URL HELPER (Works on localhost and deployed) ---
+
     function getApiUrl(endpoint) {
         const baseUrl = window.location.origin;
         return `${baseUrl}${endpoint}`;
     }
 
-   // --- 1. VARIABLES GLOBALES ---
     let products = []; 
     let cart = JSON.parse(localStorage.getItem('shopCart')) || [];
 
-    // --- 2. INITIALISATION ---
     document.addEventListener('DOMContentLoaded', () => {
-        fetchBestSellers(); // Charge les produits depuis le serveur
-        renderCart();       // Affiche le panier
-        updateTimer();      // Lance le compte à rebours
+        fetchBestSellers();
+        renderCart();
+        updateTimer();
     });
 
-    // --- 3. RÉCUPÉRATION DES DONNÉES (SERVER) ---
+
     async function fetchBestSellers() {
         try {
             const response = await fetch(getApiUrl('/api/products'));
@@ -624,7 +620,7 @@
 
             products = await response.json();
             
-            // On prend seulement les 4 premiers pour l'accueil
+ seulement les 4 premiers pour l'accueil
             const bestSellers = products.slice(0, 4); 
             renderBestSellers(bestSellers);
 
@@ -634,7 +630,7 @@
         }
     }
 
-    // --- 4. AFFICHAGE DES PRODUITS (Version Accueil) ---
+
     function renderBestSellers(list) {
         const grid = document.getElementById('bestSellersGrid');
         if(!grid) return;
@@ -662,7 +658,7 @@
         `).join('');
     }
 
-    // --- 5. GESTION DU PANIER (Même logique que produits.html) ---
+
     function addToCart(id) {
         const p = products.find(x => (x._id === id || x.id == id));
         if(!p) return;
@@ -776,7 +772,7 @@
         document.querySelector('.cart-overlay').classList.toggle('active');
     }
 
-    // --- 6. TIMER (Pour la section Flash Sale) ---
+
     function updateTimer() {
         // Date de fin fictive (demain)
         const endDate = new Date();
@@ -805,27 +801,24 @@
        // Sur la page d'accueil, on ne filtre pas en direct, on pourrait rediriger
        console.log("Recherche sur l'accueil : " + query);
     }
-    // --- FONCTION DE PAIEMENT STRIPE ---
-    // --- PROTECTED CHECKOUT FUNCTION ---
+
+
 // ==================== CHECKOUT FUNCTION ====================
 async function checkout() {
-    console. log('🛒 Checkout button clicked');
+    console.log('🛒 Checkout button clicked');
     console.log('📦 Cart contents:', cart);
 
-    // 1. Verify cart is not empty
     if (! cart || cart.length === 0) {
         alert("Votre panier est vide ! Ajoutez des produits avant de commander.");
         return;
     }
 
-    // 2. Get checkout button
     const btn = document.querySelector('.checkout-btn');
     if (!btn) {
         console.error('❌ Checkout button not found');
         return;
     }
 
-    // 3. Show loading state
     const originalText = btn.innerText;
     btn.innerText = "Redirection vers le paiement...";
     btn.disabled = true;
@@ -834,7 +827,6 @@ async function checkout() {
     try {
         console.log('📡 Sending request to server...');
         
-        // 4. Call backend API
         const response = await fetch(getApiUrl('/api/create-checkout-session'), {
             method: 'POST',
             headers: { 
@@ -846,37 +838,31 @@ async function checkout() {
 
         console.log('📥 Response status:', response.status);
 
-        // 5. Parse response
         const session = await response.json();
         console.log('📄 Response data:', session);
 
-        // 6. Check for errors
         if (! response.ok || session.error) {
-            console. error('❌ Server error:', session.error);
+            console.error('❌ Server error:', session.error);
             alert("Erreur : " + (session.error || 'Erreur serveur'));
             
-            // Reset button
             btn.innerText = originalText;
             btn.disabled = false;
             btn.style.opacity = "1";
             return;
         }
 
-        // 7. Verify we got a URL
         if (!session.url) {
             console.error('❌ No URL in response:', session);
             alert("Erreur : Le serveur n'a pas retourné d'URL de paiement");
             
-            // Reset button
             btn.innerText = originalText;
             btn.disabled = false;
             btn.style.opacity = "1";
             return;
         }
 
-        // 8. Redirect to Stripe
         console.log('✅ Redirecting to:', session.url);
-        window. location.href = session.url;
+        window.location.href = session.url;
 
     } catch (error) {
         console.error("❌ Network error:", error);
@@ -888,7 +874,7 @@ async function checkout() {
         btn.style.opacity = "1";
     }
 }
-    // --- QUANTITY CONTROLS ---
+
 function changeQty(itemId, delta) {
     const item = cart.find(x => x.id === itemId);
     if (!item) return;
@@ -916,7 +902,7 @@ function changeQty(itemId, delta) {
         }
     }
 }
-// --- SCROLL TO TOP BUTTON ---
+
 const scrollTopBtn = document.getElementById('scrollTopBtn');
 
 if (scrollTopBtn) {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin Dashboard - SportWear</title>
-    <link href="https://fonts.googleapis.com/css2? family=Montserrat:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https:
     <style>
         /* ===========================
            CSS VARIABLES
@@ -1012,7 +1012,7 @@
                         id="img" 
                         name="img" 
                         type="text"
-                        placeholder="Ex: product-1.jpg ou https://..."
+                        placeholder="Ex: product-1.jpg ou https:
                         aria-describedby="imgHelp"
                         autocomplete="off"
                     />
@@ -1028,7 +1028,7 @@
                             id="imgPreview" 
                             class="img-preview" 
                             alt="Aperçu de l'image produit" 
-                            src="https://via.placeholder.com/80? text=Aperçu"
+                            src="https:
                         />
                     </div>
                 </div>
@@ -1052,7 +1052,7 @@
          JAVASCRIPT
     =========================== -->
     <script>
-        // --- API URL HELPER ---
+
         function getApiUrl(endpoint) {
             const baseUrl = window.location.origin;
             return `${baseUrl}${endpoint}`;
@@ -1070,15 +1070,15 @@
                     const data = await response.json();
                     
                     if (! data.loggedIn) {
-                        // Not logged in - redirect to login
+                        
                         window.location.href = 'admin-login.html';
                         return;
                     }
                     
-                    // Logged in - display admin info
+                    
                     console.log('✅ Authenticated as:', data.admin.name, `(${data.admin.role})`);
                     
-                    // Optional: Show admin name in sidebar
+                    
                     const sidebarFooter = document.querySelector('.sidebar-footer');
                     if (sidebarFooter) {
                         const adminInfo = document.createElement('div');
@@ -1089,7 +1089,7 @@
                         `;
                         sidebarFooter.insertBefore(adminInfo, sidebarFooter.firstChild);
                         
-                        // Add logout button
+                        
                         const logoutBtn = document.createElement('a');
                         logoutBtn. href = '#';
                         logoutBtn. className = 'menu-item';
@@ -1120,15 +1120,15 @@
                     
                 } catch (error) {
                     console.error('Auth check failed:', error);
-                    // On error, redirect to login
+                    
                     window.location.href = 'admin-login.html';
                 }
             })();
             
 
-            // ===========================
-            // CONSTANTS & STATE
-            // ===========================
+            
+            
+            
             const API_BASE = '/api/products';
             const TOAST_DURATION = 3000;
             const SEARCH_DEBOUNCE = 300;
@@ -1139,25 +1139,25 @@
             let previouslyFocusedElement = null;
             let searchDebounceTimer = null;
 
-            // ===========================
-            // DOM CACHE
-            // ===========================
+            
+            
+            
             const DOM = {
-                // Sidebar
+                
                 sidebar: document.getElementById('sidebar'),
                 sidebarToggle: document.getElementById('sidebarToggle'),
 
-                // Main controls
+                
                 addBtn: document.getElementById('addBtn'),
                 refreshBtn: document.getElementById('refreshBtn'),
                 searchInput: document. getElementById('searchInput'),
                 categoryFilter: document.getElementById('categoryFilter'),
 
-                // Table
+                
                 adminTableBody: document.getElementById('adminTableBody'),
                 productTable: document.getElementById('productTable'),
 
-                // Modal
+                
                 addModal: document.getElementById('addModal'),
                 addForm: document.getElementById('addForm'),
                 modalTitle: document.getElementById('modalTitle'),
@@ -1166,7 +1166,7 @@
                 saveBtn: document. getElementById('saveBtn'),
                 saveBtnText: document.getElementById('saveBtnText'),
 
-                // Form inputs
+                
                 productId: document.getElementById('productId'),
                 nameInput: document.getElementById('name'),
                 priceInput: document. getElementById('price'),
@@ -1175,14 +1175,14 @@
                 imgInput: document.getElementById('img'),
                 imgPreview: document.getElementById('imgPreview'),
 
-                // Feedback
+                
                 loader: document.getElementById('loader'),
                 toast: document.getElementById('toast'),
             };
 
-            // ===========================
-            // UTILITY FUNCTIONS
-            // ===========================
+            
+            
+            
 
             /**
              * Show/hide loading spinner
@@ -1219,14 +1219,14 @@
              * Get proper image source
              */
             function getImageSrc(value) {
-                if (! value) return 'https://via.placeholder.com/48?text=No+Image';
+                if (! value) return 'https:
                 
-                // If it's already a full URL
-                if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('//')) {
+                
+                if (value.startsWith('http:
                     return value;
                 }
                 
-                // Otherwise, assume it's in the public folder
+                
                 return `/public/${value}`. replace(/\/+/g, '/');
             }
 
@@ -1245,9 +1245,9 @@
                 return `badge ${cat}`;
             }
 
-            // ===========================
-            // API FUNCTIONS
-            // ===========================
+            
+            
+            
 
             /**
              * Fetch all products from API
@@ -1340,9 +1340,9 @@
                 }
             }
 
-            // ===========================
-            // RENDERING FUNCTIONS
-            // ===========================
+            
+            
+            
 
             /**
              * Render products table
@@ -1365,7 +1365,7 @@
                                     src="${escapeHtml(imgSrc)}" 
                                     class="thumb" 
                                     alt="Image de ${escapeHtml(product. name)}" 
-                                    onerror="this.src='https://via.placeholder.com/48?text=Error'"
+                                    onerror="this.src='https:
                                 />
                             </td>
                             <td style="font-weight: 600;">${escapeHtml(product. name)}</td>
@@ -1429,9 +1429,9 @@
                 `;
             }
 
-            // ===========================
-            // FILTER & SEARCH
-            // ===========================
+            
+            
+            
 
             /**
              * Apply search and category filters
@@ -1441,12 +1441,12 @@
                 const selectedCategory = DOM.categoryFilter.value;
 
                 filteredProducts = products.filter(product => {
-                    // Search filter
+                    
                     const matchesSearch = ! searchQuery || 
                         (product.name && product.name.toLowerCase().includes(searchQuery)) ||
                         (product.brand && product.brand.toLowerCase().includes(searchQuery));
 
-                    // Category filter
+                    
                     const matchesCategory = ! selectedCategory || 
                         (product.category && product.category === selectedCategory);
 
@@ -1464,9 +1464,9 @@
                 searchDebounceTimer = setTimeout(applyFilters, SEARCH_DEBOUNCE);
             }
 
-            // ===========================
-            // MODAL FUNCTIONS
-            // ===========================
+            
+            
+            
 
             /**
              * Open modal for creating/editing product
@@ -1487,16 +1487,16 @@
                     DOM.modalTitle.textContent = 'Nouveau produit';
                     DOM. addForm.reset();
                     DOM.productId.value = '';
-                    DOM.imgPreview.src = 'https://via.placeholder.com/80?text=Aperçu';
+                    DOM.imgPreview.src = 'https:
                 }
 
                 DOM.addModal.classList.add('active');
                 DOM.addModal.setAttribute('aria-hidden', 'false');
                 
-                // Focus first input
+                
                 setTimeout(() => DOM.nameInput.focus(), 100);
                 
-                // Trap focus in modal
+                
                 setupFocusTrap();
             }
 
@@ -1507,7 +1507,7 @@
                 DOM.addModal.classList.remove('active');
                 DOM.addModal.setAttribute('aria-hidden', 'true');
                 
-                // Return focus to previously focused element
+                
                 if (previouslyFocusedElement) {
                     previouslyFocusedElement.focus();
                 }
@@ -1520,12 +1520,12 @@
              */
             function updateImagePreview() {
                 const imgValue = DOM.imgInput.value. trim();
-                DOM.imgPreview.src = imgValue ? getImageSrc(imgValue) : 'https://via.placeholder.com/80?text=Aperçu';
+                DOM.imgPreview.src = imgValue ? getImageSrc(imgValue) : 'https:
             }
 
-            // ===========================
-            // FOCUS TRAP (Accessibility)
-            // ===========================
+            
+            
+            
             let focusableElements = [];
             let firstFocusable = null;
             let lastFocusable = null;
@@ -1563,9 +1563,9 @@
                 }
             }
 
-            // ===========================
-            // FORM VALIDATION & SUBMISSION
-            // ===========================
+            
+            
+            
 
             /**
              * Validate form data
@@ -1598,20 +1598,20 @@
                     img: DOM.imgInput. value.trim()
                 };
 
-                // Validate
+                
                 const errors = validateForm(formData);
                 if (errors.length > 0) {
                     showToast(errors.join('.  '), 'error');
                     return;
                 }
 
-                // Save
+                
                 saveProduct(formData);
             }
 
-            // ===========================
-            // GLOBAL FUNCTIONS (for onclick handlers)
-            // ===========================
+            
+            
+            
 
             window.editProduct = function(id) {
                 const product = products. find(p => String(p.id ??  p._id ??  '') === String(id));
@@ -1628,49 +1628,49 @@
                 deleteProduct(id);
             };
 
-            // ===========================
-            // EVENT LISTENERS
-            // ===========================
+            
+            
+            
 
             function initEventListeners() {
-                // Sidebar toggle
+                
                 DOM.sidebarToggle.addEventListener('click', () => {
                     const isHidden = DOM.sidebar.classList.toggle('hidden');
                     DOM.sidebarToggle.setAttribute('aria-expanded', String(! isHidden));
                 });
 
-                // Add button
+                
                 DOM.addBtn.addEventListener('click', () => openModal('create'));
 
-                // Refresh button
+                
                 DOM.refreshBtn. addEventListener('click', () => {
                     fetchProducts();
                 });
 
-                // Search input
+                
                 DOM.searchInput.addEventListener('input', handleSearch);
 
-                // Category filter
+                
                 DOM.categoryFilter.addEventListener('change', applyFilters);
 
-                // Image input
+                
                 DOM.imgInput.addEventListener('input', updateImagePreview);
 
-                // Form submission
+                
                 DOM.addForm. addEventListener('submit', handleFormSubmit);
 
-                // Modal close buttons
+                
                 DOM.closeModalBtn.addEventListener('click', closeModal);
                 DOM.cancelBtn.addEventListener('click', closeModal);
 
-                // Close modal on backdrop click
+                
                 DOM.addModal.addEventListener('click', (e) => {
                     if (e.target === DOM.addModal) {
                         closeModal();
                     }
                 });
 
-                // Close modal on Escape key
+                
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape' && DOM.addModal.classList.contains('active')) {
                         closeModal();
@@ -1678,22 +1678,22 @@
                 });
             }
 
-            // ===========================
-            // INITIALIZATION
-            // ===========================
+            
+            
+            
 
             function init() {
                 initEventListeners();
                 fetchProducts();
 
-                // Hide sidebar on mobile initially
+                
                 if (window.innerWidth <= 900) {
                     DOM.sidebar.classList.add('hidden');
                     DOM.sidebarToggle. setAttribute('aria-expanded', 'false');
                 }
             }
 
-            // Start the app when DOM is ready
+            
             if (document.readyState === 'loading') {
                 document. addEventListener('DOMContentLoaded', init);
             } else {

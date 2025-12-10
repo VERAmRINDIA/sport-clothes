@@ -12,7 +12,7 @@
     <title>Catalogue - SPORTWEAR</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* --- 1. VARIABLES GLOBALES (IDENTIQUES A INDEX.HTML) --- */
+
         :root {
             --primary: #FF6B35;       /* Orange Signature */
             --primary-dark: #e55a2b;
@@ -58,7 +58,7 @@
             letter-spacing: -0.03em;
         }
 
-        /* --- 2. HEADER & TOP BAR (COPIE EXACTE DE INDEX.HTML) --- */
+
         .top-bar {
             background: var(--dark);
             color: white;
@@ -118,7 +118,7 @@
             border: 2px solid white;
         }
 
-        /* --- 3. PAGE TITLE (BANNER) --- */
+
         .page-header {
             background: #f8fafc; padding: 3rem 2rem; text-align: center;
             border-bottom: 1px solid #e2e8f0; margin-bottom: 3rem;
@@ -127,7 +127,7 @@
         .breadcrumb { color: var(--gray); font-size: 0.9rem; }
         .breadcrumb a { text-decoration: none; color: var(--dark); font-weight: 600; }
 
-        /* --- 4. LAYOUT CATALOGUE --- */
+
         .main-layout {
             max-width: 1400px; margin: 0 auto; padding: 0 2rem;
             display: grid; grid-template-columns: 280px 1fr; gap: 4rem;
@@ -158,7 +158,7 @@
             background: white; cursor: pointer; outline: none; font-family: 'Inter'; font-weight: 500;
         }
 
-        /* --- 5. PRODUITS & CARTES (Style Index + Icons PNG) --- */
+
         .products-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 2.5rem;
@@ -214,7 +214,7 @@
         .price { color: var(--primary); font-weight: 700; font-size: 1.2rem; }
         .old-price { text-decoration: line-through; color: #ccc; font-size: 0.9rem; }
 
-        /* --- 6. MODAL (QUICK VIEW RESTAURÉE) --- */
+
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 3000;
@@ -257,7 +257,7 @@
         }
         .modal-add-btn:hover { background: var(--primary); }
 
-        /* --- 7. TOAST NOTIFICATION (RESTAURÉE) --- */
+
         .toast {
             position: fixed; top: 20px; right: 20px;
             background: white; padding: 1rem 1.5rem; border-radius: 10px;
@@ -268,7 +268,7 @@
         .toast.show { transform: translateX(0); }
         .toast-icon { font-size: 1.2rem; }
 
-        /* --- 8. PAGINATION --- */
+
         .pagination { display: flex; justify-content: center; gap: 10px; margin: 5rem 0; }
         .page-btn {
             width: 45px; height: 45px; border: 1px solid #ddd; background: white;
@@ -277,7 +277,7 @@
         }
         .page-btn.active, .page-btn:hover { background: var(--dark); color: white; border-color: var(--dark); }
 
-        /* --- 9. PANIER LATERAL (IDENTIQUE INDEX) --- */
+
         .cart-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); z-index: 2000;
@@ -303,7 +303,7 @@
         }
         .checkout-btn:hover { background: var(--primary); }
 
-        /* --- FOOTER STYLES --- */
+
 .footer {
     background: #111; /* Dark background */
     color: white;
@@ -632,13 +632,13 @@
     </footer>
 
  <script>
-    // --- API URL HELPER ---
+
     function getApiUrl(endpoint) {
         const baseUrl = window.location.origin;
         return `${baseUrl}${endpoint}`;
     }
 
-    // --- 1. VARIABLES GLOBALES ---
+
     let products = []; 
     let displayedProducts = [];
     let cart = JSON.parse(localStorage.getItem('shopCart')) || [];
@@ -648,13 +648,13 @@
     let currentPage = 1;
     let totalPages = 1;
 
-    // --- 2. INITIALISATION ---
+
     document.addEventListener('DOMContentLoaded', () => {
         fetchProducts();
         renderCart();
     });
 
-    // --- 3.  CONNEXION AU SERVEUR ---
+
     async function fetchProducts() {
     try {
         const response = await fetch(getApiUrl('/api/products')); 
@@ -698,7 +698,7 @@
     }
 }
 
-    // --- 4. AFFICHAGE DES PRODUITS AVEC PAGINATION ---
+
     function renderProducts(list) {
         const grid = document.getElementById('productsGrid');
         const countLabel = document.getElementById('count');
@@ -782,7 +782,7 @@
     brandFiltersContainer.innerHTML = html;
     console.log('✅ Brand filters rendered successfully:', uniqueBrands.length, 'brands');
 }
-// --- DYNAMIC CATEGORY FILTERS ---
+
 function renderCategoryFilters() {
     const categoryFiltersContainer = document. getElementById('categoryFilters');
     
@@ -838,7 +838,7 @@ function renderCategoryFilters() {
     categoryFiltersContainer.innerHTML = html;
     console.log('✅ Category filters rendered successfully:', sortedCategories.length, 'categories');
 }
-    // --- 5. PAGINATION RENDERING ---
+
     function renderPagination(totalProducts) {
         const paginationContainer = document.querySelector('.pagination');
         if (!paginationContainer) return;
@@ -872,7 +872,7 @@ function renderCategoryFilters() {
         paginationContainer.innerHTML = html;
     }
 
-    // --- 6.  CHANGE PAGE FUNCTION (GLOBAL) ---
+
     window.changePage = function(page) {
         console.log('Changing to page:', page); // Debug
         if (page < 1 || page > totalPages) return;
@@ -880,7 +880,7 @@ function renderCategoryFilters() {
         renderProducts(displayedProducts);
     };
 
-    // --- 7. GESTION DU PANIER ---
+
     function toggleCart() {
         document.querySelector('.cart-sidebar').classList.toggle('active');
         document.querySelector('.cart-overlay').classList.toggle('active');
@@ -964,7 +964,7 @@ function renderCategoryFilters() {
         if(badge) badge.innerText = count;
     }
 
-    // --- 8.  RECHERCHE ---
+
     function searchProducts(query) {
         const lowerQuery = query.toLowerCase(). trim();
         displayedProducts = products.filter(p => 
@@ -976,7 +976,7 @@ function renderCategoryFilters() {
         renderProducts(displayedProducts);
     }
 
-    // --- 9.  MODAL ---
+
     function openModal(id) {
     const p = products.find(x => (x._id === id || x.id == id));
     if(! p) return;
@@ -1035,7 +1035,7 @@ function closeModal() {
         document.getElementById('productModal').classList.remove('active');
     }
 
-    // --- 10. FILTRES ---
+
     function applyFilters() {
         const cats = Array.from(document.querySelectorAll('input[name="cat"]:checked')).map(cb => cb.value);
         const brands = Array.from(document. querySelectorAll('input[name="brand"]:checked')).map(cb => cb.value);
@@ -1077,26 +1077,23 @@ function closeModal() {
         }
     }
 
-    // --- 11. CHECKOUT ---
+
     // ==================== CHECKOUT FUNCTION ====================
 async function checkout() {
-    console. log('🛒 Checkout button clicked');
+    console.log('🛒 Checkout button clicked');
     console.log('📦 Cart contents:', cart);
 
-    // 1. Verify cart is not empty
     if (! cart || cart.length === 0) {
         alert("Votre panier est vide ! Ajoutez des produits avant de commander.");
         return;
     }
 
-    // 2. Get checkout button
     const btn = document.querySelector('.checkout-btn');
     if (!btn) {
         console.error('❌ Checkout button not found');
         return;
     }
 
-    // 3. Show loading state
     const originalText = btn.innerText;
     btn.innerText = "Redirection vers le paiement...";
     btn.disabled = true;
@@ -1105,7 +1102,6 @@ async function checkout() {
     try {
         console.log('📡 Sending request to server...');
         
-        // 4. Call backend API
         const response = await fetch(getApiUrl('/api/create-checkout-session'), {
             method: 'POST',
             headers: { 
@@ -1117,37 +1113,31 @@ async function checkout() {
 
         console.log('📥 Response status:', response.status);
 
-        // 5. Parse response
         const session = await response.json();
         console.log('📄 Response data:', session);
 
-        // 6. Check for errors
         if (! response.ok || session.error) {
-            console. error('❌ Server error:', session.error);
+            console.error('❌ Server error:', session.error);
             alert("Erreur : " + (session.error || 'Erreur serveur'));
             
-            // Reset button
             btn.innerText = originalText;
             btn.disabled = false;
             btn.style.opacity = "1";
             return;
         }
 
-        // 7. Verify we got a URL
         if (!session.url) {
             console.error('❌ No URL in response:', session);
             alert("Erreur : Le serveur n'a pas retourné d'URL de paiement");
             
-            // Reset button
             btn.innerText = originalText;
             btn.disabled = false;
             btn.style.opacity = "1";
             return;
         }
 
-        // 8. Redirect to Stripe
         console.log('✅ Redirecting to:', session.url);
-        window. location.href = session.url;
+        window.location.href = session.url;
 
     } catch (error) {
         console.error("❌ Network error:", error);
