@@ -636,7 +636,7 @@
         grid.innerHTML = list.map(p => `
             <div class="product-card">
                 <div class="card-img-wrapper">
-                    <img src="${p.img}" class="card-img" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
+                    <img src="/${p.img}" class="card-img" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
                     
                     ${p.badge ? `<span style="position:absolute; top:15px; left:15px; background:#FF6B35; color:white; padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; z-index:2;">${p.badge === 'sale' ? 'PROMO' : 'TOP'}</span>` : ''}
                     
@@ -709,7 +709,7 @@
             
            container.innerHTML += `
     <div class="cart-item">
-        <img src="${item.img}" onerror="this.src='https://via.placeholder.com/80'">
+        <img src="/${item.img}" onerror="this.src='https://via.placeholder.com/80'">
         <div style="flex:1;">
             <h4 style="font-family:'Montserrat'; font-size:0.95rem; margin-bottom:0.5rem;">
                 ${item.name}

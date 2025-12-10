@@ -7,6 +7,7 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +29,11 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static('public'));
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Rate limiting for login endpoints
 const loginLimiter = rateLimit({
@@ -53,7 +59,16 @@ app.use(session({
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('✅ MongoDB connecté'))
-    .catch(err => console.error('❌ Erreur MongoDB:', err));
+    .catch(err => {
+        console.error('❌ Erreur MongoDB:', err.message);
+        console.error('Vérifiez votre MONGODB_URI dans .env');
+        process.exit(1);
+    });
+
+// Handle connection errors after initial connection
+mongoose.connection.on('error', (err) => {
+    console.error('❌ MongoDB connection error:', err);
+});
 
 // Product Schema
 const productSchema = new mongoose.Schema({
@@ -643,7 +658,27 @@ app.post('/api/create-checkout-session', async (req, res) => {
     }
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date(),
+        uptime: process.uptime()
+    });
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
+});
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
 });
