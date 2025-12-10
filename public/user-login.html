@@ -221,6 +221,12 @@
     </div>
 
     <script>
+        // --- API URL HELPER ---
+        function getApiUrl(endpoint) {
+            const baseUrl = window.location.origin;
+            return `${baseUrl}${endpoint}`;
+        }
+
         const form = document.getElementById('loginForm');
         const errorMsg = document.getElementById('errorMessage');
         const loginBtn = document.getElementById('loginBtn');
@@ -229,17 +235,17 @@
             e.preventDefault();
 
             const data = {
-                email: document. getElementById('email').value.trim(),
+                email: document.getElementById('email').value.trim(),
                 password: document.getElementById('password').value,
-                rememberMe: document. getElementById('rememberMe').checked
+                rememberMe: document.getElementById('rememberMe').checked
             };
 
-            errorMsg.classList. remove('show');
+            errorMsg.classList.remove('show');
             loginBtn.disabled = true;
             loginBtn.textContent = 'Connexion... ';
 
             try {
-                const response = await fetch('http://localhost:3000/api/users/login', {
+                const response = await fetch(getApiUrl('/api/users/login'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',

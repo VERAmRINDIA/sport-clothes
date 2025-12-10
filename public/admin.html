@@ -1052,11 +1052,17 @@
          JAVASCRIPT
     =========================== -->
     <script>
+        // --- API URL HELPER ---
+        function getApiUrl(endpoint) {
+            const baseUrl = window.location.origin;
+            return `${baseUrl}${endpoint}`;
+        }
+
         (() => {
             'use strict';
              (async function checkAuthentication() {
                 try {
-                    const response = await fetch('http://localhost:3000/api/admin/check', {
+                    const response = await fetch(getApiUrl('/api/admin/check'), {
                         method: 'GET',
                         credentials: 'include'
                     });
@@ -1065,7 +1071,7 @@
                     
                     if (! data.loggedIn) {
                         // Not logged in - redirect to login
-                        window. location.href = 'admin-login.html';
+                        window.location.href = 'admin-login.html';
                         return;
                     }
                     
@@ -1094,11 +1100,11 @@
                             </svg>
                             Déconnexion
                         `;
-                        logoutBtn. addEventListener('click', async (e) => {
+                        logoutBtn.addEventListener('click', async (e) => {
                             e.preventDefault();
                             if (confirm('Voulez-vous vraiment vous déconnecter ? ')) {
                                 try {
-                                    await fetch('http://localhost:3000/api/admin/logout', {
+                                    await fetch(getApiUrl('/api/admin/logout'), {
                                         method: 'POST',
                                         credentials: 'include'
                                     });

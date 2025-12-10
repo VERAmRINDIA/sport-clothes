@@ -422,12 +422,18 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // --- API URL HELPER ---
+        function getApiUrl(endpoint) {
+            const baseUrl = window.location.origin;
+            return `${baseUrl}${endpoint}`;
+        }
+
         // ====================================
         // AUTH CHECK
         // ====================================
         (async function checkAuth() {
             try {
-                const res = await fetch('http://localhost:3000/api/users/check', {
+                const res = await fetch(getApiUrl('/api/users/check'), {
                     credentials: 'include'
                 });
                 const data = await res.json();
@@ -451,16 +457,16 @@
         // ====================================
         async function loadProfile() {
             try {
-                const res = await fetch('http://localhost:3000/api/users/profile', {
+                const res = await fetch(getApiUrl('/api/users/profile'), {
                     credentials: 'include'
                 });
                 const user = await res.json();
 
                 document.getElementById('firstName').value = user.firstName || '';
                 document.getElementById('lastName').value = user.lastName || '';
-                document.getElementById('email'). value = user.email || '';
+                document.getElementById('email').value = user.email || '';
                 document.getElementById('phone').value = user.phone || '';
-                document.getElementById('street').value = user.address?. street || '';
+                document.getElementById('street').value = user.address?.street || '';
                 document.getElementById('city').value = user.address?.city || '';
                 document. getElementById('postalCode').value = user.address?.postalCode || '';
 
@@ -493,7 +499,7 @@
             saveBtn.textContent = 'Enregistrement...';
 
             try {
-                const res = await fetch('http://localhost:3000/api/users/profile', {
+                const res = await fetch(getApiUrl('/api/users/profile'), {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -520,10 +526,10 @@
         // ====================================
         async function loadOrders() {
             try {
-                const res = await fetch('http://localhost:3000/api/users/orders', {
+                const res = await fetch(getApiUrl('/api/users/orders'), {
                     credentials: 'include'
                 });
-                const orders = await res. json();
+                const orders = await res.json();
 
                 const container = document.getElementById('ordersContainer');
 
@@ -593,7 +599,7 @@
             if (! confirm('Voulez-vous vous déconnecter ?')) return;
 
             try {
-                await fetch('http://localhost:3000/api/users/logout', {
+                await fetch(getApiUrl('/api/users/logout'), {
                     method: 'POST',
                     credentials: 'include'
                 });

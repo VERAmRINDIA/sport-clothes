@@ -227,9 +227,15 @@
     </div>
 
     <script>
+        // --- API URL HELPER ---
+        function getApiUrl(endpoint) {
+            const baseUrl = window.location.origin;
+            return `${baseUrl}${endpoint}`;
+        }
+
         const form = document.getElementById('registerForm');
         const errorMsg = document.getElementById('errorMessage');
-        const registerBtn = document. getElementById('registerBtn');
+        const registerBtn = document.getElementById('registerBtn');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -250,8 +256,8 @@
             }
 
             const data = {
-                firstName: document. getElementById('firstName').value. trim(),
-                lastName: document. getElementById('lastName').value.trim(),
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 password: password,
                 phone: document.getElementById('phone').value.trim(),
@@ -268,7 +274,7 @@
             registerBtn.textContent = 'Inscription en cours...';
 
             try {
-                const response = await fetch('http://localhost:3000/api/users/register', {
+                const response = await fetch(getApiUrl('/api/users/register'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
