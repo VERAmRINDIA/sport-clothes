@@ -6,38 +6,52 @@ const cors = require('cors');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Test if env vars are loaded
 console.log('🔧 Environment Check:');
+console.log('   NODE_ENV:', process.env.NODE_ENV || 'development');
 console.log('   PORT:', process.env.PORT || 'using default 3000');
-console.log('   MongoDB:', process.env.MONGODB_URI ?  '✅' : '❌');
+console.log('   MongoDB:', process.env.MONGODB_URI ? '✅' : '❌ MISSING - Add to .env');
+console.log('   Session Secret:', process.env.SESSION_SECRET ? '✅' : '❌ MISSING - Add to .env');
 console.log('   Stripe Key:', process.env.STRIPE_SECRET_KEY ? '✅ Loaded' : '❌ Missing');
+console.log('   CORS Origin:', process.env.FRONTEND_URL || 'http://localhost:3000');
 
 // Middleware
 app.use(cors({
-    origin: true,
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true
 }));
-app.use(express. json());
+app.use(express.json());
 app.use(cookieParser());
 app.use(express.static('public'));
 
+// Rate limiting for login endpoints
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 attempts
+    message: 'Trop de tentatives de connexion, réessayez plus tard',
+    standardHeaders: false,
+    legacyHeaders: false
+});
+
 // Session middleware
 app.use(session({
-    secret: 'your-secret-key-change-this-in-production',
+    secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // Set to true if using HTTPS
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
+        sameSite: 'strict',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
 
-mongoose.connect("mongodb+srv://amine:yuyu123..@cluster0.gmtx6rf.mongodb.net/sportwearDB?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('✅ MongoDB connecté'))
     .catch(err => console.error('❌ Erreur MongoDB:', err));
 
@@ -130,8 +144,13 @@ function isSuperAdmin(req, res, next) {
 // ==================== AUTH ROUTES ====================
 
 // Login
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/admin/login', loginLimiter, async (req, res) => {
     const { email, password, rememberMe } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email et mot de passe requis' });
+    }
 
     try {
         // Find user
@@ -219,6 +238,15 @@ app.get('/api/admin/products', isAuthenticated, async (req, res) => {
 // Add product (super admin only)
 app.post('/api/admin/products', isAuthenticated, isSuperAdmin, async (req, res) => {
     try {
+        // Validate required fields
+        const { name, price, category, img, brand } = req.body;
+        if (!name || !price || !category) {
+            return res.status(400).json({ error: 'Nom, prix et catégorie requis' });
+        }
+        if (price < 0) {
+            return res.status(400).json({ error: 'Le prix doit être positif' });
+        }
+
         const product = new Product(req.body);
         await product.save();
         res.status(201).json(product);
@@ -230,7 +258,12 @@ app.post('/api/admin/products', isAuthenticated, isSuperAdmin, async (req, res) 
 // Update product
 app.put('/api/admin/products/:id', isAuthenticated, async (req, res) => {
     try {
-        const product = await Product.findByIdAndUpdate(req.params. id, req.body, { new: true });
+        // Validate data if price is being updated
+        if (req.body.price !== undefined && req.body.price < 0) {
+            return res.status(400).json({ error: 'Le prix doit être positif' });
+        }
+
+        const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!product) {
             return res.status(404).json({ error: 'Produit non trouvé' });
         }
@@ -283,9 +316,19 @@ app.put('/api/admin/orders/:id', isAuthenticated, async (req, res) => {
 
 // User Registration
 app.post('/api/users/register', async (req, res) => {
-    const { firstName, lastName, email, password, phone, address } = req. body;
+    const { firstName, lastName, email, password, phone, address } = req.body;
 
     try {
+        // Validate required fields
+        if (!firstName || !lastName || !email || !password) {
+            return res.status(400).json({ error: 'Prénom, nom, email et mot de passe requis' });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Format email invalide' });
+        }
         // Check if user already exists
         const existingUser = await User.findOne({ email: email. toLowerCase() });
         if (existingUser) {
@@ -334,8 +377,13 @@ app.post('/api/users/register', async (req, res) => {
 });
 
 // User Login
-app. post('/api/users/login', async (req, res) => {
+app.post('/api/users/login', loginLimiter, async (req, res) => {
     const { email, password, rememberMe } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email et mot de passe requis' });
+    }
 
     try {
         // Find user
