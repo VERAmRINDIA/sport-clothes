@@ -87,7 +87,7 @@ const Product = mongoose.model('Product', productSchema);
 // Order Schema
 // Order Schema
 const orderSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types. ObjectId, ref: 'User' }, // ADD THIS LINE
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // ADD THIS LINE
     items: [{
         productId: String,
         name: String,
@@ -153,7 +153,7 @@ function isSuperAdmin(req, res, next) {
     if (req.session && req.session.adminRole === 'super_admin') {
         return next();
     }
-    res.status(403). json({ error: 'Accès refusé. Droits super admin requis.' });
+    res.status(403).json({ error: 'Accès refusé. Droits super admin requis.' });
 }
 
 // ==================== AUTH ROUTES ====================
@@ -179,7 +179,7 @@ app.post('/api/admin/login', loginLimiter, async (req, res) => {
         const isValid = await bcrypt.compare(password, user.password);
         
         if (!isValid) {
-            return res.status(401). json({ error: 'Email ou mot de passe incorrect' });
+            return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
 
         // Set session
@@ -304,10 +304,10 @@ app.delete('/api/admin/products/:id', isAuthenticated, isSuperAdmin, async (req,
 // Get all orders
 app.get('/api/admin/orders', isAuthenticated, async (req, res) => {
     try {
-        const orders = await Order.find(). sort({ createdAt: -1 });
+        const orders = await Order.find().sort({ createdAt: -1 });
         res.json(orders);
     } catch (error) {
-        res.status(500).json({ error: error. message });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -546,7 +546,7 @@ app.get('/api/products', async (req, res) => {
         const products = await Product.find();
         res.json(products);
     } catch (error) {
-        res.status(500). json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
