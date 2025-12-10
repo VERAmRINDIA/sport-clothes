@@ -599,6 +599,12 @@
     </footer>
 
     <script>
+    // --- API URL HELPER (Works on localhost and deployed) ---
+    function getApiUrl(endpoint) {
+        const baseUrl = window.location.origin;
+        return `${baseUrl}${endpoint}`;
+    }
+
    // --- 1. VARIABLES GLOBALES ---
     let products = []; 
     let cart = JSON.parse(localStorage.getItem('shopCart')) || [];
@@ -613,7 +619,7 @@
     // --- 3. RÉCUPÉRATION DES DONNÉES (SERVER) ---
     async function fetchBestSellers() {
         try {
-            const response = await fetch('http://localhost:3000/api/products');
+            const response = await fetch(getApiUrl('/api/products'));
             if (!response.ok) throw new Error('Erreur réseau');
 
             products = await response.json();
@@ -829,7 +835,7 @@ async function checkout() {
         console.log('📡 Sending request to server...');
         
         // 4. Call backend API
-        const response = await fetch('http://localhost:3000/api/create-checkout-session', {
+        const response = await fetch(getApiUrl('/api/create-checkout-session'), {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'
@@ -937,7 +943,7 @@ if (scrollTopBtn) {
     userBtn.title = 'Se connecter';
     
     try {
-        const res = await fetch('http://localhost:3000/api/users/check', {
+        const res = await fetch(getApiUrl('/api/users/check'), {
             credentials: 'include'
         });
         

@@ -6,7 +6,7 @@
     <meta property="og:title" content="Catalogue - SPORTWEAR">
     <meta property="og:description" content="Plus de 50 produits de sport de qualité premium">
     <meta property="og:type" content="website">
-    <link rel="canonical" href="http://localhost:3000/produits. html">
+    <link rel="canonical" href="/produits.html">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catalogue - SPORTWEAR</title>
@@ -632,6 +632,12 @@
     </footer>
 
  <script>
+    // --- API URL HELPER ---
+    function getApiUrl(endpoint) {
+        const baseUrl = window.location.origin;
+        return `${baseUrl}${endpoint}`;
+    }
+
     // --- 1. VARIABLES GLOBALES ---
     let products = []; 
     let displayedProducts = [];
@@ -651,7 +657,7 @@
     // --- 3.  CONNEXION AU SERVEUR ---
     async function fetchProducts() {
     try {
-        const response = await fetch('http://localhost:3000/api/products'); 
+        const response = await fetch(getApiUrl('/api/products')); 
         
         if (! response.ok) {
             throw new Error('Erreur réseau');
@@ -1100,7 +1106,7 @@ async function checkout() {
         console.log('📡 Sending request to server...');
         
         // 4. Call backend API
-        const response = await fetch('http://localhost:3000/api/create-checkout-session', {
+        const response = await fetch(getApiUrl('/api/create-checkout-session'), {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'
