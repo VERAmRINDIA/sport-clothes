@@ -620,7 +620,6 @@
 
             products = await response.json();
             
- seulement les 4 premiers pour l'accueil
             const bestSellers = products.slice(0, 4); 
             renderBestSellers(bestSellers);
 
