@@ -370,7 +370,7 @@ app.post('/api/users/register', async (req, res) => {
     try {
         // Validate required fields
         if (!firstName || !lastName || !email || !password) {
-            return res.status(400).json({ error: 'Prénom, nom, email et mot de passe requis' });
+            return res.status(400).json({ error: 'Prenom, nom, email et mot de passe requis' });
         }
 
         // Validate email format
@@ -379,14 +379,14 @@ app.post('/api/users/register', async (req, res) => {
             return res.status(400).json({ error: 'Format email invalide' });
         }
         // Check if user already exists
-        const existingUser = await User.findOne({ email: email. toLowerCase() });
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
-            return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+            return res.status(400).json({ error: 'Cet email est deja utilise' });
         }
 
         // Validate password
-        if (! password || password.length < 6) {
-            return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
+        if (!password || password.length < 6) {
+            return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caracteres' });
         }
 
         // Hash password
