@@ -206,6 +206,97 @@
         }
         .badge.new { background: #10b981; }
         .badge.sale { background: var(--primary); }
+        .badge.low-stock { background: #ef4444; animation: pulse-badge 2s infinite; }
+        
+        @keyframes pulse-badge {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Quick Add Button */
+        .quick-add-btn {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(135deg, var(--primary), #ff8c5a);
+            color: white; border: none; padding: 12px;
+            font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; transform: translateY(100%);
+            transition: transform 0.3s ease;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .product-card:hover .quick-add-btn { transform: translateY(0); }
+        .quick-add-btn:hover { background: linear-gradient(135deg, #e55a2b, var(--primary)); }
+        
+        /* Product Rating on Card */
+        .card-rating {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 0.85rem; color: #fbbf24; margin-bottom: 5px;
+        }
+        .card-rating span { color: var(--gray); font-size: 0.8rem; }
+        
+        /* Recently Viewed Section */
+        .recently-viewed {
+            margin-top: 4rem; padding-top: 3rem;
+            border-top: 2px solid #f0f0f0;
+        }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem;
+        }
+        .section-title {
+            font-size: 1.5rem; font-weight: 800; text-transform: uppercase;
+            position: relative; display: inline-block;
+        }
+        .section-title::after {
+            content: ''; position: absolute; bottom: -8px; left: 0;
+            width: 60px; height: 3px; background: var(--primary);
+        }
+        .clear-history {
+            background: none; border: 1px solid #ddd; padding: 8px 16px;
+            border-radius: 20px; cursor: pointer; font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .clear-history:hover { border-color: var(--primary); color: var(--primary); }
+        
+        .recently-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        .recent-item {
+            display: flex; gap: 1rem; align-items: center;
+            padding: 1rem; background: #f8fafc; border-radius: 12px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .recent-item:hover { background: #fff; box-shadow: var(--shadow-sm); }
+        .recent-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+        .recent-info h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+        .recent-info span { color: var(--primary); font-weight: 700; font-size: 0.85rem; }
+        
+        /* Search Autocomplete */
+        .search-wrapper {
+            position: relative; display: none;
+        }
+        .search-input {
+            width: 200px; padding: 10px 15px; border: 1px solid #ddd;
+            border-radius: 25px; font-size: 0.9rem; outline: none;
+            transition: width 0.3s, border-color 0.3s;
+        }
+        .search-input:focus { width: 280px; border-color: var(--primary); }
+        .search-results {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: white; border-radius: 12px; box-shadow: var(--shadow-lg);
+            margin-top: 8px; max-height: 300px; overflow-y: auto;
+            display: none; z-index: 100;
+        }
+        .search-results.active { display: block; }
+        .search-item {
+            display: flex; gap: 12px; padding: 12px; cursor: pointer;
+            transition: 0.2s; border-bottom: 1px solid #f0f0f0;
+        }
+        .search-item:hover { background: #f8fafc; }
+        .search-item:last-child { border: none; }
+        .search-item img { width: 45px; height: 45px; object-fit: cover; border-radius: 8px; }
+        .search-item-info h4 { font-size: 0.85rem; font-weight: 600; }
+        .search-item-info span { font-size: 0.8rem; color: var(--primary); font-weight: 600; }
 
         .card-details { padding: 1.5rem 0.5rem; }
         .card-brand { font-size: 0.8rem; color: var(--gray); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
@@ -466,10 +557,14 @@
             </nav>
 
                 <div class="header-icons">
-        <div style="background: #f1f5f9; padding: 8px 15px; border-radius: 50px; display: flex; align-items: center; margin-right: 15px;">
-            <img src="search-icon.png" style="width: 16px; opacity: 0.5; margin-right: 10px;">
-            <input type="text" placeholder="Rechercher..." oninput="searchProducts(this.value)" 
-                style="border: none; background: transparent; outline: none; font-family: 'Inter'; width: 180px;">
+        <div class="search-wrapper" style="display:block;">
+            <div style="background: #f1f5f9; padding: 8px 15px; border-radius: 50px; display: flex; align-items: center;">
+                <img src="search-icon.png" style="width: 16px; opacity: 0.5; margin-right: 10px;">
+                <input type="text" id="searchInput" placeholder="Rechercher..." 
+                    oninput="searchProducts(this.value)" 
+                    style="border: none; background: transparent; outline: none; font-family: 'Inter'; width: 180px;">
+            </div>
+            <div class="search-results" id="searchResults"></div>
         </div>
 
         <a href="wishlist.html" class="icon-btn" title="Favoris">
@@ -516,24 +611,27 @@
 
         <main class="content">
     <div class="toolbar">
-        <span class="results-count"><span id="count">0</span> Résultats</span>
+        <span class="results-count"><span id="count">0</span> Resultats</span>
         <select class="sort-select" onchange="sortProducts(this.value)">
             <option value="default">Pertinence</option>
             <option value="price-asc">Prix croissant</option>
-            <option value="price-desc">Prix décroissant</option>
+            <option value="price-desc">Prix decroissant</option>
         </select>
     </div>
 
     <div class="products-grid" id="productsGrid"></div>
 
     <div class="pagination"></div>
+    
+    <!-- RECENTLY VIEWED SECTION -->
+    <div class="recently-viewed" id="recentlyViewed" style="display:none;">
+        <div class="section-header">
+            <h3 class="section-title">Vus Recemment</h3>
+            <button class="clear-history" onclick="clearRecentlyViewed()">Effacer</button>
+        </div>
+        <div class="recently-grid" id="recentlyGrid"></div>
+    </div>
 </main>
-
-            <div class="products-grid" id="productsGrid"></div>
-
-<!-- ⭐ PAGINATION CONTAINER - THIS WAS MISSING! -->
-<div class="pagination"></div>
-        </main>
     </div>
 
     <div class="modal" id="productModal">
@@ -546,6 +644,13 @@
                 <div id="modalBrand" style="color:var(--gray); text-transform:uppercase; font-weight:700;"></div>
                 <h2 class="modal-title" id="modalTitle"></h2>
                 <div class="modal-price" id="modalPrice"></div>
+                
+                <!-- RATING DISPLAY -->
+                <div id="modalRating" style="display:flex; align-items:center; gap:10px; margin-bottom:1rem;">
+                    <div id="modalStars" style="color:#fbbf24; font-size:1.2rem;"></div>
+                    <span id="modalReviewCount" style="color:var(--gray); font-size:0.9rem;"></span>
+                </div>
+                
                 <p style="color:#666; margin-bottom:2rem; line-height:1.6;">
                     Ce produit de haute performance est conçu pour vous accompagner dans tous vos entraînements. Technologie respirante et confort optimal garanti.
                 </p>
@@ -561,6 +666,40 @@
 </div>
 
                 <button class="modal-add-btn" id="modalAddBtn">AJOUTER AU PANIER</button>
+                
+                <!-- REVIEWS SECTION -->
+                <div id="reviewsSection" style="margin-top:2rem; border-top:1px solid #eee; padding-top:2rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <h3 style="font-family:Montserrat; font-weight:700;">Avis clients</h3>
+                        <button onclick="toggleReviewForm()" id="addReviewBtn" style="background:var(--primary); color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:600; cursor:pointer;">Laisser un avis</button>
+                    </div>
+                    
+                    <!-- ADD REVIEW FORM -->
+                    <div id="reviewFormContainer" style="display:none; background:#f8fafc; padding:1.5rem; border-radius:12px; margin-bottom:1.5rem;">
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Votre note</label>
+                            <div id="ratingStars" style="display:flex; gap:5px;">
+                                <span class="rating-star" data-rating="1" style="font-size:1.5rem; cursor:pointer; color:#ddd;">&#9733;</span>
+                                <span class="rating-star" data-rating="2" style="font-size:1.5rem; cursor:pointer; color:#ddd;">&#9733;</span>
+                                <span class="rating-star" data-rating="3" style="font-size:1.5rem; cursor:pointer; color:#ddd;">&#9733;</span>
+                                <span class="rating-star" data-rating="4" style="font-size:1.5rem; cursor:pointer; color:#ddd;">&#9733;</span>
+                                <span class="rating-star" data-rating="5" style="font-size:1.5rem; cursor:pointer; color:#ddd;">&#9733;</span>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Titre (optionnel)</label>
+                            <input type="text" id="reviewTitle" placeholder="Resumez votre avis" style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem;">
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Votre avis</label>
+                            <textarea id="reviewComment" rows="3" placeholder="Partagez votre experience avec ce produit..." style="width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem; resize:vertical;"></textarea>
+                        </div>
+                        <button onclick="submitReview()" style="background:var(--dark); color:white; border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer;">Publier mon avis</button>
+                    </div>
+                    
+                    <!-- REVIEWS LIST -->
+                    <div id="reviewsList" style="max-height:300px; overflow-y:auto;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -727,19 +866,22 @@
             <div class="product-card">
                 <div class="card-img-wrapper" onclick="openModal('${p._id || p.id}')">
                     <img src="/${p.img}" class="card-img" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300?text=Image+Manquante'">
-                    ${p. badge ? `<span class="badge ${p.badge}">${p. badge === 'sale' ? 'Promo' : 'Nouveau'}</span>` : ''}
+                    ${p.badge ? `<span class="badge ${p.badge}">${p.badge === 'sale' ? 'Promo' : 'Nouveau'}</span>` : ''}
+                    ${p.stock && p.stock <= 5 && p.stock > 0 ? `<span class="badge low-stock" style="left:auto; right:15px;">Plus que ${p.stock}!</span>` : ''}
                     <div class="card-actions" onclick="event.stopPropagation()">
                         <button class="action-btn" onclick="openModal('${p._id || p.id}')" title="Voir details"><img src="eye-icon.png" alt="View" onerror="this.innerHTML='O'"></button>
                         <button class="action-btn" onclick="addToWishlistLocal('${p._id || p.id}')" title="Ajouter aux favoris"><img src="heart-icon.png" alt="Favoris" onerror="this.innerHTML='*'"></button>
                         <button class="action-btn" onclick="addToCart('${p._id || p.id}')" title="Ajouter au panier"><img src="bag-icon.png" alt="Add" onerror="this.innerHTML='+'"></button>
                     </div>
+                    <button class="quick-add-btn" onclick="quickAddToCart(event, '${p._id || p.id}')">AJOUTER AU PANIER</button>
                 </div>
                 <div class="card-details" onclick="openModal('${p._id || p.id}')">
                     <div class="card-brand">${p.brand || 'Marque'}</div>
                     <h3 class="card-name">${p.name}</h3>
+                    ${p.avgRating ? `<div class="card-rating">${'<span style="color:#fbbf24">*</span>'.repeat(Math.round(p.avgRating))} <span>(${p.reviewCount || 0})</span></div>` : ''}
                     <div class="card-price-row">
                         <span class="price">${p.price} DH</span>
-                        ${p.avgRating ? `<span style="color:#fbbf24; font-size:0.85rem;">* ${p.avgRating.toFixed(1)}</span>` : ''}
+                        ${p.oldPrice ? `<span class="old-price">${p.oldPrice} DH</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -989,6 +1131,9 @@ function renderCategoryFilters() {
     function openModal(id) {
     const p = products.find(x => (x._id === id || x.id == id));
     if(! p) return;
+    
+    // Track recently viewed
+    addToRecentlyViewed(p);
 
     // Set modal image
     const imgEl = document.getElementById('modalImg');
@@ -1029,6 +1174,14 @@ function renderCategoryFilters() {
             }
         };
     }
+
+    // Load reviews for this product
+    loadReviews(p._id || p.id);
+    
+    // Reset review form
+    document.getElementById('reviewFormContainer').style.display = 'none';
+    selectedRating = 0;
+    updateStarsDisplay(0);
 
     // Open modal
     document.getElementById('productModal').classList.add('active');
@@ -1205,6 +1358,248 @@ function showToast(message) {
     }
 }
 
+// ==================== REVIEWS SYSTEM ====================
+let currentProductId = null;
+let selectedRating = 0;
+
+// Toggle review form visibility
+function toggleReviewForm() {
+    const form = document.getElementById('reviewFormContainer');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+// Setup rating stars
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.rating-star').forEach(star => {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.rating);
+            updateStarsDisplay(selectedRating);
+        });
+        star.addEventListener('mouseenter', function() {
+            updateStarsDisplay(parseInt(this.dataset.rating));
+        });
+    });
+    
+    document.getElementById('ratingStars')?.addEventListener('mouseleave', () => {
+        updateStarsDisplay(selectedRating);
+    });
+});
+
+function updateStarsDisplay(rating) {
+    document.querySelectorAll('.rating-star').forEach(star => {
+        const starRating = parseInt(star.dataset.rating);
+        star.style.color = starRating <= rating ? '#fbbf24' : '#ddd';
+    });
+}
+
+// Load reviews for a product
+async function loadReviews(productId) {
+    currentProductId = productId;
+    const reviewsList = document.getElementById('reviewsList');
+    const modalStars = document.getElementById('modalStars');
+    const modalReviewCount = document.getElementById('modalReviewCount');
+    
+    try {
+        const res = await fetch(`/api/reviews/${productId}`);
+        const data = await res.json();
+        
+        // Update rating display
+        if (data.totalReviews > 0) {
+            modalStars.innerHTML = '★'.repeat(Math.round(data.averageRating)) + '☆'.repeat(5 - Math.round(data.averageRating));
+            modalReviewCount.textContent = `${data.averageRating} (${data.totalReviews} avis)`;
+        } else {
+            modalStars.innerHTML = '';
+            modalReviewCount.textContent = 'Aucun avis';
+        }
+        
+        // Render reviews
+        if (data.reviews.length === 0) {
+            reviewsList.innerHTML = '<p style="color:#999; text-align:center; padding:2rem;">Soyez le premier a donner votre avis!</p>';
+        } else {
+            reviewsList.innerHTML = data.reviews.map(r => `
+                <div style="background:#f8fafc; padding:1rem; border-radius:10px; margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <div>
+                            <span style="font-weight:600;">${r.userName}</span>
+                            <span style="color:#fbbf24; margin-left:10px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+                        </div>
+                        <span style="color:#999; font-size:0.8rem;">${new Date(r.createdAt).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    ${r.title ? `<p style="font-weight:600; margin-bottom:0.25rem;">${r.title}</p>` : ''}
+                    <p style="color:#666; font-size:0.95rem;">${r.comment}</p>
+                    <button onclick="markHelpful('${r._id}')" style="background:none; border:none; color:#999; font-size:0.85rem; cursor:pointer; margin-top:0.5rem;">
+                        Utile (${r.helpful || 0})
+                    </button>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        reviewsList.innerHTML = '<p style="color:#999;">Impossible de charger les avis</p>';
+    }
+}
+
+// Submit a review
+async function submitReview() {
+    if (!currentProductId) return;
+    
+    if (selectedRating === 0) {
+        showToast('Veuillez selectionner une note');
+        return;
+    }
+    
+    const comment = document.getElementById('reviewComment').value.trim();
+    if (!comment) {
+        showToast('Veuillez ecrire votre avis');
+        return;
+    }
+    
+    try {
+        const res = await fetch('/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productId: currentProductId,
+                rating: selectedRating,
+                title: document.getElementById('reviewTitle').value.trim(),
+                comment
+            })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            showToast('Avis publie avec succes!');
+            document.getElementById('reviewFormContainer').style.display = 'none';
+            document.getElementById('reviewTitle').value = '';
+            document.getElementById('reviewComment').value = '';
+            selectedRating = 0;
+            updateStarsDisplay(0);
+            loadReviews(currentProductId);
+        } else {
+            showToast(data.error || 'Erreur lors de la publication');
+        }
+    } catch (error) {
+        showToast('Erreur de connexion');
+    }
+}
+
+// Mark review as helpful
+async function markHelpful(reviewId) {
+    try {
+        await fetch(`/api/reviews/${reviewId}/helpful`, { method: 'POST' });
+        loadReviews(currentProductId);
+    } catch (error) {
+        console.error('Error marking helpful:', error);
+    }
+}
+
+// ==================== RECENTLY VIEWED SYSTEM ====================
+function addToRecentlyViewed(product) {
+    let recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+    
+    // Remove if already exists
+    recent = recent.filter(p => p.id !== (product._id || product.id));
+    
+    // Add to beginning
+    recent.unshift({
+        id: product._id || product.id,
+        name: product.name,
+        price: product.price,
+        img: product.img,
+        brand: product.brand
+    });
+    
+    // Keep only last 6
+    recent = recent.slice(0, 6);
+    
+    localStorage.setItem('recentlyViewed', JSON.stringify(recent));
+    renderRecentlyViewed();
+}
+
+function renderRecentlyViewed() {
+    const container = document.getElementById('recentlyViewed');
+    const grid = document.getElementById('recentlyGrid');
+    const recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+    
+    if (recent.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    grid.innerHTML = recent.map(p => `
+        <div class="recent-item" onclick="openModal('${p.id}')">
+            <img src="/${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/60'">
+            <div class="recent-info">
+                <h4>${p.name.substring(0, 20)}...</h4>
+                <span>${p.price} DH</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function clearRecentlyViewed() {
+    localStorage.removeItem('recentlyViewed');
+    document.getElementById('recentlyViewed').style.display = 'none';
+    showToast('Historique efface');
+}
+
+// ==================== QUICK ADD TO CART ====================
+function quickAddToCart(e, productId) {
+    e.stopPropagation(); // Prevent opening modal
+    addToCart(productId);
+    showToast('Produit ajoute au panier!');
+}
+
+// ==================== SEARCH AUTOCOMPLETE ====================
+let searchTimeout;
+
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.toLowerCase().trim();
+        
+        if (query.length < 2) {
+            searchResults.classList.remove('active');
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            const results = products.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                (p.brand && p.brand.toLowerCase().includes(query))
+            ).slice(0, 5);
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div style="padding:1rem; color:#999; text-align:center;">Aucun resultat</div>';
+            } else {
+                searchResults.innerHTML = results.map(p => `
+                    <div class="search-item" onclick="openModal('${p._id || p.id}'); document.getElementById('searchResults').classList.remove('active');">
+                        <img src="/${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/45'">
+                        <div class="search-item-info">
+                            <h4>${p.name}</h4>
+                            <span>${p.price} DH</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            searchResults.classList.add('active');
+        }, 200);
+    });
+    
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-wrapper')) {
+            searchResults.classList.remove('active');
+        }
+    });
+}
+
 // Check user login status and update profile link
 async function checkUserStatus() {
     try {
@@ -1223,6 +1618,8 @@ async function checkUserStatus() {
 // Call on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkUserStatus();
+    renderRecentlyViewed();
+    initSearch();
 });
 </script>
 </body>

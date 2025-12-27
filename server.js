@@ -84,9 +84,9 @@ const productSchema = new mongoose.Schema({
 const Product = mongoose.model('Product', productSchema);
 
 // Order Schema
-// Order Schema
 const orderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
+    trackingNumber: { type: String, unique: true },
     items: [{
         productId: String,
         name: String,
@@ -96,8 +96,29 @@ const orderSchema = new mongoose.Schema({
     }],
     totalAmount: Number,
     customerEmail: String,
-    status: { type: String, default: 'pending' },
+    customerPhone: String,
+    shippingAddress: {
+        street: String,
+        city: String,
+        postalCode: String,
+        country: { type: String, default: 'Maroc' }
+    },
+    status: { type: String, default: 'pending', enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'] },
+    statusHistory: [{
+        status: String,
+        date: { type: Date, default: Date.now },
+        note: String
+    }],
+    estimatedDelivery: Date,
     createdAt: { type: Date, default: Date.now }
+});
+
+// Generate tracking number before save
+orderSchema.pre('save', function(next) {
+    if (!this.trackingNumber) {
+        this.trackingNumber = 'SPW' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+    }
+    next();
 });
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -118,6 +139,21 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 const Order = mongoose.model('Order', orderSchema);
+
+// Review Schema
+const reviewSchema = new mongoose.Schema({
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    userName: { type: String, required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    title: { type: String },
+    comment: { type: String, required: true },
+    verified: { type: Boolean, default: false },
+    helpful: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Review = mongoose.model('Review', reviewSchema);
 
 // ==================== ADMIN CREDENTIALS ====================
 // In production, store hashed passwords in database
@@ -663,6 +699,200 @@ app.get('/health', (req, res) => {
         timestamp: new Date(),
         uptime: process.uptime()
     });
+});
+
+// ==================== ORDER TRACKING API ====================
+
+// Track order by tracking number
+app.get('/api/orders/track/:trackingNumber', async (req, res) => {
+    try {
+        const order = await Order.findOne({ trackingNumber: req.params.trackingNumber });
+        
+        if (!order) {
+            return res.status(404).json({ error: 'Commande non trouvee' });
+        }
+        
+        res.json({
+            trackingNumber: order.trackingNumber,
+            status: order.status,
+            statusHistory: order.statusHistory || [],
+            items: order.items.map(i => ({ name: i.name, quantity: i.quantity })),
+            totalAmount: order.totalAmount,
+            estimatedDelivery: order.estimatedDelivery,
+            createdAt: order.createdAt
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get user's orders (authenticated)
+app.get('/api/orders/my-orders', async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ error: 'Non connecte' });
+        }
+        
+        const orders = await Order.find({ userId: req.session.userId })
+            .sort({ createdAt: -1 });
+        
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update order status (admin only)
+app.put('/api/admin/orders/:id/status', isAuthenticated, async (req, res) => {
+    try {
+        const { status, note } = req.body;
+        const order = await Order.findById(req.params.id);
+        
+        if (!order) {
+            return res.status(404).json({ error: 'Commande non trouvee' });
+        }
+        
+        order.status = status;
+        order.statusHistory = order.statusHistory || [];
+        order.statusHistory.push({ status, note, date: new Date() });
+        
+        // Set estimated delivery for shipped orders
+        if (status === 'shipped' && !order.estimatedDelivery) {
+            order.estimatedDelivery = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days
+        }
+        
+        await order.save();
+        res.json({ success: true, order });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==================== REVIEWS API ====================
+
+// Get all reviews for a product
+app.get('/api/reviews/:productId', async (req, res) => {
+    try {
+        const reviews = await Review.find({ productId: req.params.productId })
+            .sort({ createdAt: -1 });
+        
+        // Calculate average rating
+        const avgRating = reviews.length > 0 
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+            : 0;
+        
+        res.json({
+            reviews,
+            totalReviews: reviews.length,
+            averageRating: Math.round(avgRating * 10) / 10
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all reviews (for admin)
+app.get('/api/admin/reviews', isAuthenticated, async (req, res) => {
+    try {
+        const reviews = await Review.find()
+            .populate('productId', 'name')
+            .sort({ createdAt: -1 });
+        res.json(reviews);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add a review (authenticated users only)
+app.post('/api/reviews', async (req, res) => {
+    try {
+        const { productId, rating, title, comment } = req.body;
+        
+        // Check if user is logged in
+        if (!req.session.userId) {
+            return res.status(401).json({ error: 'Vous devez etre connecte pour laisser un avis' });
+        }
+        
+        // Validate input
+        if (!productId || !rating || !comment) {
+            return res.status(400).json({ error: 'Produit, note et commentaire requis' });
+        }
+        
+        if (rating < 1 || rating > 5) {
+            return res.status(400).json({ error: 'La note doit etre entre 1 et 5' });
+        }
+        
+        // Check if user already reviewed this product
+        const existingReview = await Review.findOne({
+            productId,
+            userId: req.session.userId
+        });
+        
+        if (existingReview) {
+            return res.status(400).json({ error: 'Vous avez deja laisse un avis pour ce produit' });
+        }
+        
+        const review = new Review({
+            productId,
+            userId: req.session.userId,
+            userName: req.session.userName,
+            rating,
+            title,
+            comment,
+            verified: false
+        });
+        
+        await review.save();
+        res.status(201).json(review);
+        
+    } catch (error) {
+        console.error('Review error:', error);
+        res.status(500).json({ error: 'Erreur lors de l\'ajout de l\'avis' });
+    }
+});
+
+// Delete a review (admin or owner)
+app.delete('/api/reviews/:id', async (req, res) => {
+    try {
+        const review = await Review.findById(req.params.id);
+        
+        if (!review) {
+            return res.status(404).json({ error: 'Avis non trouve' });
+        }
+        
+        // Check if admin or owner
+        const isAdmin = req.session.adminId;
+        const isOwner = req.session.userId && review.userId.toString() === req.session.userId.toString();
+        
+        if (!isAdmin && !isOwner) {
+            return res.status(403).json({ error: 'Non autorise' });
+        }
+        
+        await Review.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Avis supprime' });
+        
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Mark review as helpful
+app.post('/api/reviews/:id/helpful', async (req, res) => {
+    try {
+        const review = await Review.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { helpful: 1 } },
+            { new: true }
+        );
+        
+        if (!review) {
+            return res.status(404).json({ error: 'Avis non trouve' });
+        }
+        
+        res.json(review);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Start server
