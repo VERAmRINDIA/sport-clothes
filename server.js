@@ -335,6 +335,64 @@ app.delete('/api/admin/products/:id', isAuthenticated, isSuperAdmin, async (req,
     }
 });
 
+// Get dashboard stats - REAL DATA
+app.get('/api/admin/stats', isAuthenticated, async (req, res) => {
+    try {
+        // Get total revenue from orders (excluding cancelled)
+        const revenueResult = await Order.aggregate([
+            { $match: { status: { $ne: 'cancelled' } } },
+            { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+        ]);
+        const revenue = revenueResult[0]?.total || 0;
+
+        // Get total orders count
+        const ordersCount = await Order.countDocuments();
+
+        // Get customers count
+        const customersCount = await User.countDocuments();
+
+        // Get products count
+        const productsCount = await Product.countDocuments();
+
+        // Get recent orders for activity
+        const recentOrders = await Order.find()
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .select('trackingNumber totalAmount status createdAt items customerEmail');
+
+        // Get recent users
+        const recentUsers = await User.find()
+            .sort({ createdAt: -1 })
+            .limit(3)
+            .select('firstName lastName city createdAt');
+
+        // Monthly revenue for chart (last 12 months)
+        const monthlyRevenue = await Order.aggregate([
+            { $match: { status: { $ne: 'cancelled' } } },
+            {
+                $group: {
+                    _id: { $month: '$createdAt' },
+                    total: { $sum: '$totalAmount' }
+                }
+            },
+            { $sort: { '_id': 1 } }
+        ]);
+
+        res.json({
+            revenue,
+            ordersCount,
+            customersCount,
+            productsCount,
+            recentOrders,
+            recentUsers,
+            monthlyRevenue
+        });
+    } catch (error) {
+        console.error('Stats error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Get all orders
 app.get('/api/admin/orders', isAuthenticated, async (req, res) => {
     try {
@@ -579,6 +637,19 @@ app.get('/api/products', async (req, res) => {
     try {
         const products = await Product.find();
         res.json(products);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get single product by ID
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ error: 'Produit non trouve' });
+        }
+        res.json(product);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

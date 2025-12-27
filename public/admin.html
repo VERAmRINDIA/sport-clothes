@@ -27,6 +27,49 @@
             --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
         }
 
+        /* LIGHT THEME */
+        body.light-theme {
+            --dark: #f8fafc;
+            --dark-card: #ffffff;
+            --dark-hover: #f1f5f9;
+            --border: rgba(0,0,0,0.08);
+            --text: #1e293b;
+            --text-dim: #64748b;
+        }
+
+        body.light-theme .bg-effects::before,
+        body.light-theme .bg-effects::after {
+            opacity: 0.3;
+        }
+
+        body.light-theme .sidebar {
+            background: rgba(255,255,255,0.95);
+            border-color: var(--border);
+        }
+
+        body.light-theme .stat-icon svg,
+        body.light-theme .nav-item svg {
+            stroke: var(--text-dim);
+        }
+
+        body.light-theme .nav-item.active svg,
+        body.light-theme .nav-item:hover svg {
+            stroke: var(--primary);
+        }
+
+        body.light-theme .modal-content {
+            background: var(--dark-card);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        body.light-theme .product-card {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        body.light-theme .chart-bar {
+            background: linear-gradient(180deg, var(--primary) 0%, rgba(255,107,53,0.6) 100%);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -35,6 +78,7 @@
             color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
         }
 
         /* Animated Background */
@@ -1038,6 +1082,11 @@
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                     <input type="text" placeholder="Rechercher..." id="searchInput">
                 </div>
+                <!-- THEME TOGGLE -->
+                <button class="topbar-btn theme-toggle" onclick="toggleTheme()" title="Changer le theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                </button>
                 <button class="topbar-btn" onclick="alert('Notifications: Aucune nouvelle notification')">
                     <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
                     <span class="notification-dot"></span>
@@ -1183,7 +1232,7 @@
         </div>
     </main>
 
-    <!-- ADD PRODUCT MODAL -->
+    <!-- PRODUCT MODAL (ADD/EDIT) -->
     <div class="modal" id="productModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1191,6 +1240,8 @@
                 <button class="modal-close" onclick="closeProductModal()">&times;</button>
             </div>
             <form id="productForm">
+                <!-- Hidden field for edit mode -->
+                <input type="hidden" id="editProductId" value="">
                 <div class="form-group">
                     <label>Nom du produit</label>
                     <input type="text" id="productName" placeholder="Ex: T-shirt Nike Pro" required>
@@ -1222,13 +1273,40 @@
                     <label>Description</label>
                     <textarea id="productDescription" placeholder="Description du produit..."></textarea>
                 </div>
-                <button type="submit" class="submit-btn">Enregistrer le produit</button>
+                <button type="submit" class="submit-btn" id="submitBtn">Enregistrer le produit</button>
             </form>
         </div>
     </div>
 
     <script>
-        // Check authentication
+        // ==================== THEME TOGGLE ====================
+        function initTheme() {
+            const savedTheme = localStorage.getItem('adminTheme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                updateThemeIcons(true);
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light-theme');
+            localStorage.setItem('adminTheme', isLight ? 'light' : 'dark');
+            updateThemeIcons(isLight);
+        }
+
+        function updateThemeIcons(isLight) {
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+            if (sunIcon && moonIcon) {
+                sunIcon.style.display = isLight ? 'none' : 'block';
+                moonIcon.style.display = isLight ? 'block' : 'none';
+            }
+        }
+
+        // Initialize theme on load
+        initTheme();
+
+        // ==================== AUTHENTICATION ====================
         async function checkAuth() {
             try {
                 const res = await fetch('/api/admin/check');
@@ -1248,7 +1326,6 @@
             }
         }
 
-        // Logout
         async function logout() {
             try {
                 await fetch('/api/admin/logout', { method: 'POST' });
@@ -1258,39 +1335,98 @@
             }
         }
 
-        // Load dashboard data
+        // ==================== DASHBOARD DATA (REAL STATS) ====================
         async function loadDashboard() {
             try {
+                // Load real stats from API
+                const statsRes = await fetch('/api/admin/stats');
+                if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    
+                    // Set real values
+                    document.getElementById('revenueValue').textContent = stats.revenue.toLocaleString() + ' DH';
+                    document.getElementById('ordersValue').textContent = stats.ordersCount.toString();
+                    document.getElementById('customersValue').textContent = stats.customersCount.toString();
+                    document.getElementById('productsValue').textContent = stats.productsCount.toString();
+                    document.getElementById('productCount').textContent = stats.productsCount.toString();
+                    
+                    // Animate values
+                    setTimeout(() => {
+                        animateValue('revenueValue', stats.revenue);
+                        animateValue('ordersValue', stats.ordersCount);
+                        animateValue('customersValue', stats.customersCount);
+                        animateValue('productsValue', stats.productsCount);
+                    }, 300);
+
+                    // Update recent activity if available
+                    if (stats.recentOrders && stats.recentOrders.length > 0) {
+                        updateActivity(stats.recentOrders, stats.recentUsers);
+                    }
+                } else {
+                    // Fallback to basic data
+                    loadBasicStats();
+                }
+
                 // Load products
                 const productsRes = await fetch('/api/products');
                 const products = await productsRes.json();
-                
-                document.getElementById('productsValue').textContent = products.length;
-                document.getElementById('productCount').textContent = products.length;
-                
                 renderProducts(products);
-
-                // Load users count
-                try {
-                    const usersRes = await fetch('/api/admin/users');
-                    if (usersRes.ok) {
-                        const users = await usersRes.json();
-                        document.getElementById('customersValue').textContent = users.length;
-                    }
-                } catch (e) {
-                    document.getElementById('customersValue').textContent = '24';
-                }
-
-                // Set mock data for demo
-                document.getElementById('revenueValue').textContent = '45,320 DH';
-                document.getElementById('ordersValue').textContent = '128';
 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
+                loadBasicStats();
             }
         }
 
-        // Render products
+        // Fallback for basic stats
+        async function loadBasicStats() {
+            try {
+                const productsRes = await fetch('/api/products');
+                const products = await productsRes.json();
+                document.getElementById('productsValue').textContent = products.length;
+                document.getElementById('productCount').textContent = products.length;
+                renderProducts(products);
+            } catch (e) {
+                console.error('Error loading basic stats:', e);
+            }
+        }
+
+        // Update activity feed with real data
+        function updateActivity(orders, users) {
+            const activityList = document.querySelector('.activity-list');
+            if (!activityList) return;
+
+            let html = '';
+
+            orders.slice(0, 4).forEach(order => {
+                const timeAgo = getTimeAgo(new Date(order.createdAt));
+                const itemCount = order.items?.length || 1;
+                html += `
+                    <div class="activity-item">
+                        <div class="activity-icon order">
+                            <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        </div>
+                        <div class="activity-info">
+                            <h4>Commande ${order.trackingNumber || '#' + order._id.slice(-4)}</h4>
+                            <p>${itemCount} article${itemCount > 1 ? 's' : ''} - ${order.totalAmount} DH</p>
+                        </div>
+                        <span class="activity-time">${timeAgo}</span>
+                    </div>
+                `;
+            });
+
+            activityList.innerHTML = html || activityList.innerHTML;
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Il y a quelques sec';
+            if (seconds < 3600) return `Il y a ${Math.floor(seconds / 60)} min`;
+            if (seconds < 86400) return `Il y a ${Math.floor(seconds / 3600)}h`;
+            return `Il y a ${Math.floor(seconds / 86400)}j`;
+        }
+
+        // ==================== PRODUCTS RENDERING ====================
         function renderProducts(products) {
             const grid = document.getElementById('productsGrid');
             grid.innerHTML = products.map(p => `
@@ -1317,52 +1453,53 @@
             `).join('');
         }
 
-        // Modal functions
+        // ==================== MODAL FUNCTIONS ====================
         function openProductModal() {
             document.getElementById('productModal').classList.add('active');
             document.getElementById('modalTitle').textContent = 'Ajouter un produit';
+            document.getElementById('submitBtn').textContent = 'Enregistrer le produit';
             document.getElementById('productForm').reset();
+            document.getElementById('editProductId').value = '';
         }
 
         function closeProductModal() {
             document.getElementById('productModal').classList.remove('active');
+            document.getElementById('editProductId').value = '';
         }
 
-        // Scroll to products
-        function scrollToProducts() {
-            document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Edit product
+        // ==================== EDIT PRODUCT (FULL MODAL) ====================
         async function editProduct(id) {
-            const newName = prompt('Nouveau nom du produit:');
-            if (!newName) return;
-            
-            const newPrice = prompt('Nouveau prix (DH):');
-            if (!newPrice) return;
-            
             try {
-                const res = await fetch(`/api/products/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: newName, price: parseFloat(newPrice) })
-                });
-                
-                if (res.ok) {
-                    loadDashboard();
-                    alert('Produit mis a jour!');
-                } else {
-                    alert('Erreur lors de la mise a jour');
-                }
+                // Fetch product data
+                const res = await fetch(`/api/products/${id}`);
+                if (!res.ok) throw new Error('Product not found');
+                const product = await res.json();
+
+                // Populate modal with product data
+                document.getElementById('editProductId').value = id;
+                document.getElementById('productName').value = product.name || '';
+                document.getElementById('productPrice').value = product.price || '';
+                document.getElementById('productStock').value = product.stock || 100;
+                document.getElementById('productCategory').value = product.category || 'homme';
+                document.getElementById('productImage').value = product.img || product.image || '';
+                document.getElementById('productDescription').value = product.description || '';
+
+                // Update modal title and button
+                document.getElementById('modalTitle').textContent = 'Modifier le produit';
+                document.getElementById('submitBtn').textContent = 'Mettre a jour';
+
+                // Open modal
+                document.getElementById('productModal').classList.add('active');
+
             } catch (error) {
-                console.error('Error updating product:', error);
-                alert('Erreur de connexion');
+                console.error('Error fetching product:', error);
+                alert('Erreur lors du chargement du produit');
             }
         }
 
-        // Delete product
+        // ==================== DELETE PRODUCT ====================
         async function deleteProduct(id) {
-            if (!confirm('Supprimer ce produit?')) return;
+            if (!confirm('Etes-vous sur de vouloir supprimer ce produit?')) return;
             
             try {
                 await fetch(`/api/products/${id}`, { method: 'DELETE' });
@@ -1372,9 +1509,12 @@
             }
         }
 
-        // Product form submit
+        // ==================== FORM SUBMIT (ADD/EDIT) ====================
         document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const editId = document.getElementById('editProductId').value;
+            const isEdit = editId && editId.length > 0;
             
             const product = {
                 name: document.getElementById('productName').value,
@@ -1386,25 +1526,38 @@
             };
 
             try {
-                const res = await fetch('/api/products', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(product)
-                });
+                let res;
+                if (isEdit) {
+                    // UPDATE existing product
+                    res = await fetch(`/api/products/${editId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(product)
+                    });
+                } else {
+                    // CREATE new product
+                    res = await fetch('/api/products', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(product)
+                    });
+                }
 
                 if (res.ok) {
                     closeProductModal();
                     loadDashboard();
-                    alert('Produit ajoute avec succes!');
+                    alert(isEdit ? 'Produit mis a jour avec succes!' : 'Produit ajoute avec succes!');
                 } else {
-                    alert('Erreur lors de l\'ajout');
+                    const error = await res.json();
+                    alert(error.error || 'Erreur lors de l\'operation');
                 }
             } catch (error) {
                 console.error('Error saving product:', error);
+                alert('Erreur de connexion au serveur');
             }
         });
 
-        // Search functionality
+        // ==================== SEARCH ====================
         document.getElementById('searchInput').addEventListener('input', async (e) => {
             const query = e.target.value.toLowerCase();
             const productsRes = await fetch('/api/products');
@@ -1418,7 +1571,11 @@
             renderProducts(filtered);
         });
 
-        // Animate values
+        // ==================== UTILITIES ====================
+        function scrollToProducts() {
+            document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+        }
+
         function animateValue(id, end, duration = 1500) {
             const obj = document.getElementById(id);
             if (!obj) return;
@@ -1442,16 +1599,9 @@
             requestAnimationFrame(update);
         }
 
-        // Initialize
+        // ==================== INITIALIZE ====================
         checkAuth();
         loadDashboard();
-        
-        // Animate stats after load
-        setTimeout(() => {
-            animateValue('revenueValue', 45320);
-            animateValue('ordersValue', 128);
-            animateValue('customersValue', 24);
-        }, 500);
     </script>
 </body>
 </html>
