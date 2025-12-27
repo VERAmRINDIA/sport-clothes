@@ -1036,13 +1036,9 @@ function renderCategoryFilters() {
 }
 
 function closeModal() {
-    document. getElementById('productModal').classList.remove('active');
+    document.getElementById('productModal').classList.remove('active');
     document.body.style.overflow = ''; // Restore scroll
 }
-
-    function closeModal() {
-        document.getElementById('productModal').classList.remove('active');
-    }
 
 
     function applyFilters() {
@@ -1089,8 +1085,8 @@ function closeModal() {
 
     // ==================== CHECKOUT FUNCTION ====================
 async function checkout() {
-    console.log('🛒 Checkout button clicked');
-    console.log('📦 Cart contents:', cart);
+    console.log('Checkout button clicked');
+    console.log('Cart contents:', cart);
 
     if (! cart || cart.length === 0) {
         alert("Votre panier est vide ! Ajoutez des produits avant de commander.");
