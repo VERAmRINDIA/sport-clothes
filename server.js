@@ -485,51 +485,76 @@ app.post('/api/users/register', async (req, res) => {
 
 // User Login
 app.post('/api/users/login', loginLimiter, async (req, res) => {
+    console.log('🔐 Login attempt received');
+    console.log('   Body:', JSON.stringify(req.body));
+    
     const { email, password, rememberMe } = req.body;
 
     // Validate input
     if (!email || !password) {
+        console.log('❌ Missing email or password');
         return res.status(400).json({ error: 'Email et mot de passe requis' });
     }
 
     try {
+        console.log('🔍 Searching for user:', email.toLowerCase());
+        
         // Find user
         const user = await User.findOne({ email: email.toLowerCase() });
         
         if (!user) {
+            console.log('❌ User not found in database');
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
+        
+        console.log('✅ User found:', user.firstName, user.lastName);
+        console.log('🔑 Comparing passwords...');
 
         // Check password
         const isValid = await bcrypt.compare(password, user.password);
         
+        console.log('   Password valid:', isValid);
+        
         if (!isValid) {
-            return res.status(401). json({ error: 'Email ou mot de passe incorrect' });
+            console.log('❌ Password incorrect');
+            return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
 
         // Create session
         req.session.userId = user._id;
         req.session.userEmail = user.email;
         req.session.userName = `${user.firstName} ${user.lastName}`;
+        
+        console.log('✅ Session created for user:', user._id);
 
         // Extend cookie if remember me
         if (rememberMe) {
-            req.session. cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+            req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
         }
-
-        res.json({
-            success: true,
-            user: {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email
+        
+        // Force session save before responding
+        req.session.save((err) => {
+            if (err) {
+                console.error('❌ Session save error:', err);
+                return res.status(500).json({ error: 'Erreur de session' });
             }
+            
+            console.log('✅ Login successful, sending response');
+            
+            res.json({
+                success: true,
+                user: {
+                    id: user._id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email: user.email
+                }
+            });
         });
 
     } catch (error) {
-        console.error('Login error:', error);
-        res. status(500).json({ error: 'Erreur lors de la connexion' });
+        console.error('❌ Login error:', error);
+        res.status(500).json({ error: 'Erreur lors de la connexion' });
     }
 });
 

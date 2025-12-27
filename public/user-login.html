@@ -534,26 +534,41 @@
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember').checked;
             const errorMsg = document.getElementById('errorMsg');
             const btn = e.target.querySelector('button[type="submit"]');
+            
+            // Validation basique
+            if (!email || !password) {
+                errorMsg.textContent = 'Veuillez remplir tous les champs';
+                errorMsg.style.display = 'block';
+                return;
+            }
             
             btn.textContent = 'Connexion...';
             btn.disabled = true;
             errorMsg.style.display = 'none';
 
             try {
+                console.log('🔐 Tentative de connexion...', { email, rememberMe });
+                
                 const response = await fetch('/api/users/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, rememberMe })
                 });
 
+                console.log('📥 Response status:', response.status);
                 const data = await response.json();
+                console.log('📄 Response data:', data);
 
-                if (response.ok) {
+                if (response.ok && data.success) {
+                    // Stocker les infos utilisateur dans localStorage aussi
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    console.log('✅ Connexion réussie, redirection...');
                     window.location.href = 'user-profile.html';
                 } else {
                     errorMsg.textContent = data.error || 'Email ou mot de passe incorrect';
@@ -562,12 +577,26 @@
                     btn.disabled = false;
                 }
             } catch (error) {
-                errorMsg.textContent = 'Erreur de connexion au serveur';
+                console.error('❌ Erreur:', error);
+                errorMsg.textContent = 'Erreur de connexion au serveur. Vérifiez que le serveur est démarré.';
                 errorMsg.style.display = 'block';
                 btn.textContent = 'SE CONNECTER';
                 btn.disabled = false;
             }
         });
+        
+        // Vérifier si déjà connecté
+        (async function checkAuth() {
+            try {
+                const res = await fetch('/api/users/check', { credentials: 'include' });
+                const data = await res.json();
+                if (data.loggedIn) {
+                    window.location.href = 'user-profile.html';
+                }
+            } catch(e) {
+                console.log('Serveur non disponible');
+            }
+        })();
     </script>
 </body>
 </html>
