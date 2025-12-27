@@ -1,4 +1,4 @@
-require('dotenv').config();  // ✅ Load .env FIRST!
+require('dotenv').config();  
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -53,7 +53,7 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000 
     }
 }));
 
@@ -65,12 +65,11 @@ mongoose.connect(process.env.MONGODB_URI)
         process.exit(1);
     });
 
-// Handle connection errors after initial connection
 mongoose.connection.on('error', (err) => {
     console.error('❌ MongoDB connection error:', err);
 });
 
-// Product Schema
+
 const productSchema = new mongoose.Schema({
     name: String,
     price: Number,
@@ -87,7 +86,7 @@ const Product = mongoose.model('Product', productSchema);
 // Order Schema
 // Order Schema
 const orderSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // ADD THIS LINE
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
     items: [{
         productId: String,
         name: String,
@@ -118,7 +117,6 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', userSchema);
-
 const Order = mongoose.model('Order', orderSchema);
 
 // ==================== ADMIN CREDENTIALS ====================
