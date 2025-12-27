@@ -472,7 +472,12 @@
                 style="border: none; background: transparent; outline: none; font-family: 'Inter'; width: 180px;">
         </div>
 
-        <button class="icon-btn"><img src="profile-icon.png" alt="User"></button>
+        <a href="wishlist.html" class="icon-btn" title="Favoris">
+            <img src="heart-icon.png" alt="Favoris">
+        </a>
+        <a href="user-login.html" class="icon-btn" id="profileBtn" title="Mon compte">
+            <img src="profile-icon.png" alt="User">
+        </a>
         <button class="icon-btn" onclick="toggleCart()">
             <img src="cart-icon.png" alt="Cart">
             <span class="cart-badge" id="cartCount">0</span>
@@ -720,16 +725,16 @@
 
         grid.innerHTML = productsToShow.map(p => `
             <div class="product-card">
-                <div class="card-img-wrapper" onclick="viewProduct('${p._id || p.id}')">
+                <div class="card-img-wrapper" onclick="openModal('${p._id || p.id}')">
                     <img src="/${p.img}" class="card-img" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300?text=Image+Manquante'">
                     ${p. badge ? `<span class="badge ${p.badge}">${p. badge === 'sale' ? 'Promo' : 'Nouveau'}</span>` : ''}
                     <div class="card-actions" onclick="event.stopPropagation()">
-                        <button class="action-btn" onclick="viewProduct('${p._id || p.id}')" title="Voir details"><img src="eye-icon.png" alt="View" onerror="this.innerHTML='O'"></button>
-                        <button class="action-btn" onclick="addToWishlist('${p._id || p.id}')" title="Ajouter aux favoris"><img src="heart-icon.png" alt="Favoris" onerror="this.innerHTML='*'"></button>
+                        <button class="action-btn" onclick="openModal('${p._id || p.id}')" title="Voir details"><img src="eye-icon.png" alt="View" onerror="this.innerHTML='O'"></button>
+                        <button class="action-btn" onclick="addToWishlistLocal('${p._id || p.id}')" title="Ajouter aux favoris"><img src="heart-icon.png" alt="Favoris" onerror="this.innerHTML='*'"></button>
                         <button class="action-btn" onclick="addToCart('${p._id || p.id}')" title="Ajouter au panier"><img src="bag-icon.png" alt="Add" onerror="this.innerHTML='+'"></button>
                     </div>
                 </div>
-                <div class="card-details" onclick="viewProduct('${p._id || p.id}')">
+                <div class="card-details" onclick="openModal('${p._id || p.id}')">
                     <div class="card-brand">${p.brand || 'Marque'}</div>
                     <h3 class="card-name">${p.name}</h3>
                     <div class="card-price-row">
@@ -1168,26 +1173,30 @@ function viewProduct(id) {
     window.location.href = `product-detail.html?id=${id}`;
 }
 
-// Add to wishlist
-async function addToWishlist(id) {
-    try {
-        const res = await fetch(`/api/wishlist/${id}`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-
-        if (res.status === 401) {
-            showToast('Connectez-vous pour ajouter aux favoris');
-            setTimeout(() => window.location.href = 'user-login.html', 1500);
-            return;
-        }
-
-        if (res.ok) {
-            showToast('Ajoute aux favoris');
-        }
-    } catch (error) {
-        console.error('Error adding to wishlist:', error);
+// Add to wishlist (local storage for non-logged users)
+function addToWishlistLocal(id) {
+    const p = products.find(x => (x._id === id || x.id == id));
+    if(!p) return;
+    
+    let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+    
+    // Check if already in wishlist
+    const exists = wishlist.find(item => item.id === id || item._id === id);
+    if(exists) {
+        showToast('Deja dans vos favoris!');
+        return;
     }
+    
+    wishlist.push({
+        id: p._id || p.id,
+        name: p.name,
+        price: p.price,
+        img: p.img,
+        brand: p.brand || ''
+    });
+    
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    showToast('Ajoute aux favoris!');
 }
 
 // Show toast notification
@@ -1199,6 +1208,26 @@ function showToast(message) {
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 }
+
+// Check user login status and update profile link
+async function checkUserStatus() {
+    try {
+        const res = await fetch('/api/users/check');
+        const data = await res.json();
+        const profileBtn = document.getElementById('profileBtn');
+        if(data.loggedIn && profileBtn) {
+            profileBtn.href = 'user-profile.html';
+            profileBtn.title = data.user.name || 'Mon profil';
+        }
+    } catch(e) {
+        console.log('User not logged in');
+    }
+}
+
+// Call on page load
+document.addEventListener('DOMContentLoaded', () => {
+    checkUserStatus();
+});
 </script>
 </body>
 </html>
