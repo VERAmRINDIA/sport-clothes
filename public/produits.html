@@ -720,18 +720,22 @@
 
         grid.innerHTML = productsToShow.map(p => `
             <div class="product-card">
-                <div class="card-img-wrapper" onclick="openModal('${p._id || p.id}')">
+                <div class="card-img-wrapper" onclick="viewProduct('${p._id || p.id}')">
                     <img src="/${p.img}" class="card-img" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300?text=Image+Manquante'">
                     ${p. badge ? `<span class="badge ${p.badge}">${p. badge === 'sale' ? 'Promo' : 'Nouveau'}</span>` : ''}
                     <div class="card-actions" onclick="event.stopPropagation()">
-                        <button class="action-btn" onclick="openModal('${p._id || p.id}')"><img src="eye-icon.png" alt="View" onerror="this.innerHTML='👁️'"></button>
-                        <button class="action-btn" onclick="addToCart('${p._id || p.id}')"><img src="bag-icon.png" alt="Add" onerror="this.innerHTML='+'"></button>
+                        <button class="action-btn" onclick="viewProduct('${p._id || p.id}')" title="Voir details"><img src="eye-icon.png" alt="View" onerror="this.innerHTML='O'"></button>
+                        <button class="action-btn" onclick="addToWishlist('${p._id || p.id}')" title="Ajouter aux favoris"><img src="heart-icon.png" alt="Favoris" onerror="this.innerHTML='*'"></button>
+                        <button class="action-btn" onclick="addToCart('${p._id || p.id}')" title="Ajouter au panier"><img src="bag-icon.png" alt="Add" onerror="this.innerHTML='+'"></button>
                     </div>
                 </div>
-                <div class="card-details" onclick="openModal('${p._id || p.id}')">
+                <div class="card-details" onclick="viewProduct('${p._id || p.id}')">
                     <div class="card-brand">${p.brand || 'Marque'}</div>
                     <h3 class="card-name">${p.name}</h3>
-                    <div class="card-price">${p.price} DH</div>
+                    <div class="card-price-row">
+                        <span class="price">${p.price} DH</span>
+                        ${p.avgRating ? `<span style="color:#fbbf24; font-size:0.85rem;">* ${p.avgRating.toFixed(1)}</span>` : ''}
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -1157,6 +1161,43 @@ function clearAllFilters() {
     displayedProducts = [... products];
     currentPage = 1;
     renderProducts(displayedProducts);
+}
+
+// View product detail page
+function viewProduct(id) {
+    window.location.href = `product-detail.html?id=${id}`;
+}
+
+// Add to wishlist
+async function addToWishlist(id) {
+    try {
+        const res = await fetch(`/api/wishlist/${id}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        if (res.status === 401) {
+            showToast('Connectez-vous pour ajouter aux favoris');
+            setTimeout(() => window.location.href = 'user-login.html', 1500);
+            return;
+        }
+
+        if (res.ok) {
+            showToast('Ajoute aux favoris');
+        }
+    } catch (error) {
+        console.error('Error adding to wishlist:', error);
+    }
+}
+
+// Show toast notification
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    if(toast) {
+        document.getElementById('toastMsg').textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
 }
 </script>
 </body>

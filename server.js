@@ -78,12 +78,52 @@ const productSchema = new mongoose.Schema({
     brand: String,
     badge: String,
     description: String,
-    stock: { type: Number, default: 100 }
+    stock: { type: Number, default: 100 },
+    sizes: [String],
+    colors: [String],
+    avgRating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 }
 });
 
 const Product = mongoose.model('Product', productSchema);
 
-// Order Schema
+// Review Schema
+const reviewSchema = new mongoose.Schema({
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    userName: String,
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    title: String,
+    comment: String,
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Review = mongoose.model('Review', reviewSchema);
+
+// Wishlist Schema
+const wishlistSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    updatedAt: { type: Date, default: Date.now }
+});
+
+const Wishlist = mongoose.model('Wishlist', wishlistSchema);
+
+// Coupon Schema
+const couponSchema = new mongoose.Schema({
+    code: { type: String, required: true, unique: true, uppercase: true },
+    discountType: { type: String, enum: ['percentage', 'fixed'], default: 'percentage' },
+    discountValue: { type: Number, required: true },
+    minOrderAmount: { type: Number, default: 0 },
+    maxUses: { type: Number, default: null },
+    usedCount: { type: Number, default: 0 },
+    expiresAt: Date,
+    isActive: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Coupon = mongoose.model('Coupon', couponSchema);
+
 // Order Schema
 const orderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
@@ -95,10 +135,14 @@ const orderSchema = new mongoose.Schema({
         img: String
     }],
     totalAmount: Number,
+    discountAmount: { type: Number, default: 0 },
+    couponCode: String,
     customerEmail: String,
     status: { type: String, default: 'pending' },
+    trackingNumber: String,
     createdAt: { type: Date, default: Date.now }
 });
+
 // User Schema
 const userSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
@@ -112,7 +156,8 @@ const userSchema = new mongoose.Schema({
         postalCode: String,
         country: { type: String, default: 'Maroc' }
     },
-    orders: [{ type: mongoose.Schema.Types. ObjectId, ref: 'Order' }],
+    orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
+    recentlyViewed: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -536,6 +581,342 @@ app.get('/api/users/orders', async (req, res) => {
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
+
+// ==================== WISHLIST ROUTES ====================
+
+// Get user wishlist
+app.get('/api/wishlist', async (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({ error: 'Non autorise' });
+    }
+
+    try {
+        let wishlist = await Wishlist.findOne({ userId: req.session.userId })
+            .populate('products');
+        
+        if (!wishlist) {
+            wishlist = { products: [] };
+        }
+
+        res.json(wishlist);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add to wishlist
+app.post('/api/wishlist/:productId', async (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({ error: 'Non autorise' });
+    }
+
+    try {
+        let wishlist = await Wishlist.findOne({ userId: req.session.userId });
+
+        if (!wishlist) {
+            wishlist = new Wishlist({
+                userId: req.session.userId,
+                products: [req.params.productId]
+            });
+        } else if (!wishlist.products.includes(req.params.productId)) {
+            wishlist.products.push(req.params.productId);
+            wishlist.updatedAt = new Date();
+        }
+
+        await wishlist.save();
+        res.json({ success: true, message: 'Ajoute aux favoris' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Remove from wishlist
+app.delete('/api/wishlist/:productId', async (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({ error: 'Non autorise' });
+    }
+
+    try {
+        await Wishlist.findOneAndUpdate(
+            { userId: req.session.userId },
+            { $pull: { products: req.params.productId }, updatedAt: new Date() }
+        );
+
+        res.json({ success: true, message: 'Retire des favoris' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==================== REVIEW ROUTES ====================
+
+// Get reviews for a product
+app.get('/api/products/:productId/reviews', async (req, res) => {
+    try {
+        const reviews = await Review.find({ productId: req.params.productId })
+            .sort({ createdAt: -1 });
+        res.json(reviews);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add review
+app.post('/api/products/:productId/reviews', async (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({ error: 'Connectez-vous pour laisser un avis' });
+    }
+
+    try {
+        const { rating, title, comment } = req.body;
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ error: 'Note invalide (1-5)' });
+        }
+
+        // Check if user already reviewed this product
+        const existingReview = await Review.findOne({
+            productId: req.params.productId,
+            userId: req.session.userId
+        });
+
+        if (existingReview) {
+            return res.status(400).json({ error: 'Vous avez deja donne un avis' });
+        }
+
+        const review = new Review({
+            productId: req.params.productId,
+            userId: req.session.userId,
+            userName: req.session.userName,
+            rating,
+            title,
+            comment
+        });
+
+        await review.save();
+
+        // Update product average rating
+        const allReviews = await Review.find({ productId: req.params.productId });
+        const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+
+        await Product.findByIdAndUpdate(req.params.productId, {
+            avgRating: Math.round(avgRating * 10) / 10,
+            reviewCount: allReviews.length
+        });
+
+        res.status(201).json(review);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==================== COUPON ROUTES ====================
+
+// Validate coupon
+app.post('/api/coupons/validate', async (req, res) => {
+    try {
+        const { code, orderAmount } = req.body;
+
+        if (!code) {
+            return res.status(400).json({ error: 'Code requis' });
+        }
+
+        const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
+
+        if (!coupon) {
+            return res.status(404).json({ error: 'Code invalide' });
+        }
+
+        if (coupon.expiresAt && new Date() > coupon.expiresAt) {
+            return res.status(400).json({ error: 'Code expire' });
+        }
+
+        if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+            return res.status(400).json({ error: 'Code plus disponible' });
+        }
+
+        if (orderAmount < coupon.minOrderAmount) {
+            return res.status(400).json({ 
+                error: `Minimum ${coupon.minOrderAmount} DH requis` 
+            });
+        }
+
+        let discount = 0;
+        if (coupon.discountType === 'percentage') {
+            discount = (orderAmount * coupon.discountValue) / 100;
+        } else {
+            discount = coupon.discountValue;
+        }
+
+        res.json({
+            valid: true,
+            code: coupon.code,
+            discountType: coupon.discountType,
+            discountValue: coupon.discountValue,
+            discount: Math.round(discount * 100) / 100
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Admin: Create coupon
+app.post('/api/admin/coupons', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+        const coupon = new Coupon(req.body);
+        await coupon.save();
+        res.status(201).json(coupon);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Admin: Get all coupons
+app.get('/api/admin/coupons', isAuthenticated, async (req, res) => {
+    try {
+        const coupons = await Coupon.find().sort({ createdAt: -1 });
+        res.json(coupons);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Admin: Delete coupon
+app.delete('/api/admin/coupons/:id', isAuthenticated, isSuperAdmin, async (req, res) => {
+    try {
+        await Coupon.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==================== ADVANCED PRODUCT ROUTES ====================
+
+// Get single product
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ error: 'Produit non trouve' });
+        }
+
+        // Track recently viewed if user is logged in
+        if (req.session?.userId) {
+            await User.findByIdAndUpdate(req.session.userId, {
+                $addToSet: { recentlyViewed: { $each: [product._id], $position: 0 } }
+            });
+            // Keep only last 10 viewed products
+            await User.findByIdAndUpdate(req.session.userId, {
+                $push: { recentlyViewed: { $each: [], $slice: 10 } }
+            });
+        }
+
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Advanced product search with filters
+app.get('/api/products/search/filter', async (req, res) => {
+    try {
+        const { 
+            category, 
+            brand, 
+            minPrice, 
+            maxPrice, 
+            sort,
+            search,
+            page = 1,
+            limit = 12
+        } = req.query;
+
+        let query = {};
+
+        if (category) query.category = category;
+        if (brand) query.brand = brand;
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = Number(minPrice);
+            if (maxPrice) query.price.$lte = Number(maxPrice);
+        }
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { brand: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        let sortOption = {};
+        switch (sort) {
+            case 'price-asc': sortOption = { price: 1 }; break;
+            case 'price-desc': sortOption = { price: -1 }; break;
+            case 'rating': sortOption = { avgRating: -1 }; break;
+            case 'newest': sortOption = { _id: -1 }; break;
+            default: sortOption = { _id: -1 };
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        
+        const [products, total] = await Promise.all([
+            Product.find(query).sort(sortOption).skip(skip).limit(Number(limit)),
+            Product.countDocuments(query)
+        ]);
+
+        res.json({
+            products,
+            pagination: {
+                total,
+                page: Number(page),
+                pages: Math.ceil(total / Number(limit))
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all categories
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await Product.distinct('category');
+        res.json(categories);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all brands
+app.get('/api/brands', async (req, res) => {
+    try {
+        const brands = await Product.distinct('brand');
+        res.json(brands);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get recently viewed products
+app.get('/api/users/recently-viewed', async (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.json([]);
+    }
+
+    try {
+        const user = await User.findById(req.session.userId)
+            .populate('recentlyViewed')
+            .select('recentlyViewed');
+
+        res.json(user?.recentlyViewed || []);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ==================== PUBLIC ROUTES ====================
 
 // Get products (public)
