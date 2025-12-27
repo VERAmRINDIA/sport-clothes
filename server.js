@@ -156,20 +156,20 @@ const reviewSchema = new mongoose.Schema({
 const Review = mongoose.model('Review', reviewSchema);
 
 // ==================== ADMIN CREDENTIALS ====================
-// In production, store hashed passwords in database
+// Password: admin123 for both accounts
 const ADMIN_USERS = [
     {
         id: 1,
         email: 'admin@sportwear.ma',
-        password: '$2b$10$nlGIdrgVmTEOrmD7dfzGqOk6pCmuGKCkzBkIFf03NH6bKRRUcxJHq',
+        password: '$2b$10$0cWgR.j6OEvs7lNDDgKa6Oo1K/DXDO8OTJm7y89Ei7XFa1BUcCmO2',
         name: 'Admin Principal',
         role: 'super_admin'
     },
     {
         id: 2,
         email: 'moderator@sportwear.ma',
-        password: '$2b$10$nlGIdrgVmTEOrmD7dfzGqOk6pCmuGKCkzBkIFf03NH6bKRRUcxJHq',
-        name: 'Modérateur',
+        password: '$2b$10$0cWgR.j6OEvs7lNDDgKa6Oo1K/DXDO8OTJm7y89Ei7XFa1BUcCmO2',
+        name: 'Moderateur',
         role: 'moderator'
     }
 ];
