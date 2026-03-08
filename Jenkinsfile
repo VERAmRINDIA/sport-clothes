@@ -1,36 +1,62 @@
 pipeline {
-    agent any
+  agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                echo 'Code fetched from GitHub'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                bat 'npm install'
-            }
-        }
-
-        stage('Verify Environment') {
-            steps {
-                bat 'node --version'
-                bat 'npm --version'
-            }
-        }
-
-        stage('Optional Tests') {
-            steps {
-                bat 'npm test --if-present'
-            }
-        }
-
-        stage('Optional Build') {
-            steps {
-                bat 'npm run build --if-present'
-            }
-        }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        echo 'Code fetched from GitHub'
+      }
     }
+
+    stage('Verify Environment') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'node --version'
+            sh 'npm --version'
+          } else {
+            bat 'node --version'
+            bat 'npm --version'
+          }
+        }
+      }
+    }
+
+    stage('Install Dependencies') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'npm ci'
+          } else {
+            bat 'npm ci'
+          }
+        }
+      }
+    }
+
+    stage('Tests (optional)') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'npm test --if-present'
+          } else {
+            bat 'npm test --if-present'
+          }
+        }
+      }
+    }
+
+    stage('Build (optional)') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'npm run build --if-present'
+          } else {
+            bat 'npm run build --if-present'
+          }
+        }
+      }
+    }
+  }
 }
