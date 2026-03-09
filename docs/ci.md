@@ -55,11 +55,62 @@ Le serveur vérifie la présence de :
 
 ---
 
-## État actuel / améliorations recommandées
-- ✅ Pipeline CI possible : `npm ci` + `npm test`
-- ⚠️ Aucun vrai test automatisé pour le moment  
-  → Ajouter des tests (ex: Jest + Supertest) pour rendre la CI utile.
-- (Optionnel) Ajouter un linter (ESLint) pour améliorer la qualité du code.
+---
+
+## Plan de travail – Jour 2 (objectif : CI Jenkins stable, sans déploiement)
+
+### Objectif fin de journée (DoD)
+- Un push sur GitHub (ou un scan Multibranch) déclenche un build Jenkins
+- La pipeline exécute : `npm ci` + `npm test`
+- Les logs Jenkins confirment le checkout + les versions Node/npm
+- Une PR/branche CI existe (si modifications) + issues créées pour les améliorations (tests/lint)
+
+---
+
+### Personne 1 (Responsable / Doc & repo) – @<ton_nom>
+**Tâches**
+1. Vérifier le `Jenkinsfile` dans le dépôt (lisibilité + conformité)
+   - Checkout réel (`checkout scm`)
+   - `npm ci` utilisé (pas `npm install`)
+2. Créer/mettre à jour une branche `feature/ci-mvp` si une modification est nécessaire
+3. Ouvrir une PR vers `develop` (ou `main` si vous n’avez pas `develop`)
+4. Créer 2 issues GitHub :
+   - `CI - Ajouter de vrais tests (Jest + Supertest)`
+   - `CI - Ajouter lint (ESLint) + script npm run lint`
+5. Mettre à jour ce fichier `docs/ci.md` avec le suivi Jour 2 (fait / à faire / blocages)
+
+**Livrables**
+- PR (si changements) + 2 issues créées + doc à jour
+
+---
+
+### Personne 2 (Jenkins / Intégration GitHub) – @<ami_1>
+**Tâches**
+1. Configurer le job Jenkins (Multibranch recommandé) sur le repo
+2. Vérifier que Jenkins récupère bien la bonne branche et les derniers commits
+3. Mettre en place le déclenchement automatique (si possible) :
+   - Webhook GitHub → Jenkins (`/github-webhook/`) **ou**
+   - Scan automatique/périodique du Multibranch (si webhook bloquant)
+4. Vérifier/ajouter les credentials nécessaires (accès repo si privé)
+
+**Livrables**
+- Build déclenché automatiquement (ou scan multibranch OK) + preuve (capture/log)
+
+---
+
+### Personne 3 (Stabilisation CI / Debug) – @<ami_2>
+**Tâches**
+1. Reproduire localement (ou sur l’agent Jenkins) les commandes CI :
+   - `npm ci`
+   - `npm test`
+2. Corriger les erreurs qui font échouer la CI (si elles apparaissent) :
+   - dépendances, permissions, version Node, chemins, etc.
+3. Proposer une amélioration “valeur CI” pour Jour 3 :
+   - soit ajouter ESLint (`npm run lint`)
+   - soit ajouter 1 vrai test Jest minimal (smoke/API)
+
+**Livrables**
+- Pipeline Jenkins qui passe (SUCCESS) + note “blocages & fixes” + plan Jour 3
 
 ---
 
@@ -70,15 +121,63 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+        echo 'Code fetched from GitHub'
+      }
     }
 
-    stage('Install') {
-      steps { sh 'npm ci' }
+    stage('Verify Environment') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'node --version'
+            sh 'npm --version'
+          } else {
+            bat 'node --version'
+            bat 'npm --version'
+          }
+        }
+      }
     }
 
-    stage('Test') {
-      steps { sh 'npm test' }
+    stage('Install Dependencies') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'npm ci'
+          } else {
+            bat 'npm ci'
+          }
+        }
+      }
     }
+
+    stage('Tests (optional)') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'npm test --if-present'
+          } else {
+            bat 'npm test --if-present'
+          }
+        }
+      }
+    }
+
+    stage('Build (optional)') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'npm run build --if-present'
+          } else {
+            bat 'npm run build --if-present'
+          }
+        }
+      }
+    }
+  }
+}
+
   }
 }
