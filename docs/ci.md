@@ -67,7 +67,7 @@ Le serveur vérifie la présence de :
 
 ---
 
-### Personne 1 (Responsable / Doc & repo) – @<ton_nom>
+### Personne 1 (Ilias)
 **Tâches**
 1. Vérifier le `Jenkinsfile` dans le dépôt (lisibilité + conformité)
    - Checkout réel (`checkout scm`)
@@ -84,7 +84,7 @@ Le serveur vérifie la présence de :
 
 ---
 
-### Personne 2 (Jenkins / Intégration GitHub) – @<ami_1>
+### Personne 2 (Jenkins / Intégration GitHub) – (Amine)
 **Tâches**
 1. Configurer le job Jenkins (Multibranch recommandé) sur le repo
 2. Vérifier que Jenkins récupère bien la bonne branche et les derniers commits
@@ -98,7 +98,7 @@ Le serveur vérifie la présence de :
 
 ---
 
-### Personne 3 (Stabilisation CI / Debug) – @<ami_2>
+### Personne 3 (Stabilisation CI / Debug) – (Abdessamad)
 **Tâches**
 1. Reproduire localement (ou sur l’agent Jenkins) les commandes CI :
    - `npm ci`
