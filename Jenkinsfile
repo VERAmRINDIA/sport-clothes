@@ -35,17 +35,18 @@ pipeline {
       }
     }
 
-    stage('Tests (optional)') {
-      steps {
-        script {
-          if (isUnix()) {
-            sh 'npm test --if-present'
-          } else {
-            bat 'npm test --if-present'
-          }
+    stage('Quality Gate: Linting') {
+            steps {
+                script {
+                    echo 'Starting Static Code Analysis...'
+                    if (isUnix()) {
+                      sh 'npx eslint .'
+                    } else {
+                      bat 'npx eslint .'
+                    }
+                }
+            }
         }
-      }
-    }
 
     stage('Build (optional)') {
       steps {
@@ -54,6 +55,18 @@ pipeline {
             sh 'npm run build --if-present'
           } else {
             bat 'npm run build --if-present'
+          }
+        }
+      }
+    }
+
+    stage('Tests (optional)') {
+      steps {
+        script {
+          if (isUnix()) {
+            sh 'npm test --if-present'
+          } else {
+            bat 'npm test --if-present'
           }
         }
       }

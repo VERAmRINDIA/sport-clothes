@@ -280,7 +280,7 @@ app.get('/api/admin/products', isAuthenticated, async (req, res) => {
 app.post('/api/admin/products', isAuthenticated, isSuperAdmin, async (req, res) => {
     try {
         // Validate required fields
-        const { name, price, category, img, brand } = req.body;
+        const { name, price, category} = req.body;
         if (!name || !price || !category) {
             return res.status(400).json({ error: 'Nom, prix et catégorie requis' });
         }
@@ -934,7 +934,7 @@ process.on('uncaughtException', (error) => {
     process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
     console.error('Unhandled Rejection:', reason);
     process.exit(1);
 });
