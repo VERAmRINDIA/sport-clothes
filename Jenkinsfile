@@ -47,6 +47,24 @@ pipeline {
                 }
             }
         }
+    
+
+
+    stage('Security Gate: Audit') {
+      steps {
+        script {
+          echo ' Scanning for known vulnerabilities in packages...'
+          if (isUnix()) {
+            // --audit-level=high means it only fails if it finds a dangerous bug
+            sh 'npm audit --audit-level=high'
+          } else {
+            bat 'npm audit --audit-level=high'
+          }
+          echo ' No critical security issues found.'
+        }
+      }
+    }
+
 
     stage('Build (optional)') {
       steps {
