@@ -29,7 +29,7 @@ pipeline {
           if (isUnix()) {
             sh 'npm ci'
           } else {
-            bat 'npm ci'
+            bat 'npm install --legacy-peer-deps'
           }
         }
       }
